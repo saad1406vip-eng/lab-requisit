@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق إدارة طلبات المختبر</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+            color: #1a202c;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 3px solid #3b82f6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            border-right: 4px solid #3b82f6;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #15803d;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .input-field {
+            border: 2px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            width: 100%;
+            font-size: 0.95rem;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-primary {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        thead {
+            background: #f0f9ff;
+            border-bottom: 2px solid #bfdbfe;
+        }
+
+        th {
+            padding: 0.75rem;
+            text-align: right;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tbody tr:hover {
+            background: #f0f9ff;
+        }
+
+        .item-card {
+            background: white;
+            border-radius: 0.5rem;
+            border-right: 4px solid #3b82f6;
+            padding: 1rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .item-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .print-header {
+            text-align: center;
+            border-bottom: 3px solid #0369a1;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120px;
+            color: rgba(59, 130, 246, 0.03);
+            font-weight: 900;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: -1;
+            font-family: Arial, sans-serif;
+        }
+
+        .copyright-mark {
+            position: fixed;
+            bottom: 15px;
+            left: 20px;
+            font-size: 0.8rem;
+            color: #999;
+            opacity: 0.6;
+            z-index: -1;
+            pointer-events: none;
+            font-weight: 500;
+            font-family: Arial, sans-serif;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .watermark {
+                display: none !important;
+            }
+            .copyright-mark {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- البصمة الشخصية -->
+    <div class="watermark">سعد القرني</div>
+    <div class="copyright-mark">© 2026 سعد القرني</div>
+    
+    <div id="app"></div>
+
+    <script>
+        // قاعدة البيانات الشاملة
+        const allItems = [
+            // كيمياء
+            { id: 'chm_1', category: 'كيمياء', name: 'TROPONIN MINI VIDAS', code: 'VAVA.2343', boxSize: 60 },
+            { id: 'chm_2', category: 'كيمياء', name: 'BETA HCG MINI VIDAS', code: 'VAVA.2345', boxSize: 60 },
+            { id: 'chm_3', category: 'كيمياء', name: 'CG +6 ISTAT', code: 'VAVA.3148', boxSize: 25 },
+            { id: 'chm_4', category: 'كيمياء', name: 'BNP ISTAT', code: 'VAVA.3149', boxSize: 25 },
+            { id: 'chm_5', category: 'كيمياء', name: 'CG+4', code: 'VAVA.3150', boxSize: 25 },
+            { id: 'chm_6', category: 'كيمياء', name: 'TROPONINI ISTAT', code: 'VAVA.3161', boxSize: 25 },
+            { id: 'chm_7', category: 'كيمياء', name: 'PT/INR ISTAT', code: 'VAVA.3162', boxSize: 24 },
+            { id: 'chm_8', category: 'كيمياء', name: 'KIT URINALYSIS', code: 'VAVA.3718', boxSize: 100 },
+            { id: 'chm_9', category: 'كيمياء', name: 'شرطة تحليل البول', code: 'VAVA.3719', boxSize: 100 },
+            { id: 'chm_10', category: 'كيمياء', name: 'شرطة تحليل الحمل', code: 'VAVA.3751', boxSize: 40 },
+            { id: 'chm_11', category: 'كيمياء', name: 'شراب قياس منحني السكر', code: 'VAVA.3752', boxSize: 20 },
+            { id: 'chm_12', category: 'كيمياء', name: 'شرطة تحليل السكر', code: 'VAVA.3753', boxSize: 100 },
+            
+            // اختبارات بيور
+            { id: 'bio_1', category: 'اختبارات بيور', name: 'ALP', code: 'VAVA.0312', boxSize: 1100 },
+            { id: 'bio_2', category: 'اختبارات بيور', name: 'K', code: 'VAVA.0312', boxSize: 9000 },
+            { id: 'bio_3', category: 'اختبارات بيور', name: 'NA', code: 'VAVA.0314', boxSize: 9000 },
+            { id: 'bio_4', category: 'اختبارات بيور', name: 'CHOL', code: 'VAVA.0387', boxSize: 2200 },
+            { id: 'bio_5', category: 'اختبارات بيور', name: 'HDL', code: 'VAVA.0387', boxSize: 700 },
+            { id: 'bio_6', category: 'اختبارات بيور', name: 'IRON', code: 'VAVA.0387', boxSize: 700 },
+            { id: 'bio_7', category: 'اختبارات بيور', name: 'LDH', code: 'VAVA.0387', boxSize: 850 },
+            { id: 'bio_8', category: 'اختبارات بيور', name: 'LDL', code: 'VAVA.0387', boxSize: 600 },
+            { id: 'bio_9', category: 'اختبارات بيور', name: 'ALT', code: 'VAVA.0387', boxSize: 800 },
+            { id: 'bio_10', category: 'اختبارات بيور', name: 'GGT', code: 'VAVA.0387', boxSize: 400 },
+            { id: 'bio_11', category: 'اختبارات بيور', name: 'GLU', code: 'VAVA.0387', boxSize: 3300 },
+            { id: 'bio_12', category: 'اختبارات بيور', name: 'HBA1C', code: 'VAVA.0387', boxSize: 500 },
+            { id: 'bio_13', category: 'اختبارات بيور', name: 'LIPASE', code: 'VAVA.0387', boxSize: 200 },
+            { id: 'bio_14', category: 'اختبارات بيور', name: 'AMMONIA', code: 'VAVA.0387', boxSize: 300 },
+            { id: 'bio_15', category: 'اختبارات بيور', name: 'AMYLASE', code: 'VAVA.0387', boxSize: 750 },
+            { id: 'bio_16', category: 'اختبارات بيور', name: 'CK', code: 'VAVA.0387', boxSize: 500 },
+            { id: 'bio_17', category: 'اختبارات بيور', name: 'TB', code: 'VAVA.0387', boxSize: 1050 },
+            { id: 'bio_18', category: 'اختبارات بيور', name: 'TIBC', code: 'VAVA.0387', boxSize: 100 },
+            { id: 'bio_19', category: 'اختبارات بيور', name: 'TRIG', code: 'VAVA.0387', boxSize: 1000 },
+            { id: 'bio_20', category: 'اختبارات بيور', name: 'URIC ACID', code: 'VAVA.0387', boxSize: 1300 },
+            
+            // هرمونات
+            { id: 'horm_1', category: 'هرمونات', name: 'INSULIN', code: 'VAVA.0386', boxSize: 'TET / Kit 100' },
+            { id: 'horm_2', category: 'هرمونات', name: 'CORTISOL', code: 'VAVA.0384', boxSize: 'TET / Kit 300' },
+            { id: 'horm_3', category: 'هرمونات', name: 'PTH', code: 'VAVA.0388', boxSize: 'TET / Kit 300' },
+            { id: 'horm_4', category: 'هرمونات', name: 'TSH', code: 'VAVA.0388', boxSize: 'TET / Kit 300' },
+            { id: 'horm_5', category: 'هرمونات', name: 'FREE T3', code: 'VAVA.0388', boxSize: 'TET / Kit 300' },
+            { id: 'horm_6', category: 'هرمونات', name: 'FREE T4', code: 'VAVA.0388', boxSize: 'TET / Kit 300' },
+            
+            // مستهلكات
+            { id: 'cons_1', category: 'مستهلكات', name: 'BAG15*25', code: 'VAVA.1199', boxSize: 1000 },
+            { id: 'cons_2', category: 'مستهلكات', name: 'BAG 14*16', code: 'VAVA.1201', boxSize: 2000 },
+            { id: 'cons_3', category: 'مستهلكات', name: 'TUBE EDTA', code: 'VAVA.1832', boxSize: 1200 },
+            { id: 'cons_4', category: 'مستهلكات', name: 'TUBE PT 3.2', code: 'VAVA.1827', boxSize: 100 },
+            { id: 'cons_5', category: 'مستهلكات', name: 'GLASS SLIDE', code: 'VAVA.1713', boxSize: 2500 },
+            { id: 'cons_6', category: 'مستهلكات', name: 'LANCET ADULT', code: 'VAVA.1517', boxSize: 5000 },
+            { id: 'cons_7', category: 'مستهلكات', name: 'TIPS 100 UL', code: 'VAVA.1788', boxSize: 1000 },
+            { id: 'cons_8', category: 'مستهلكات', name: 'PASTEUR PIPETTE', code: 'VAVA.1801', boxSize: 1000 },
+            
+            // أمراض الدم
+            { id: 'blood_1', category: 'أمراض الدم', name: 'CBC XN1000', code: 'VAVA.2453', boxSize: 450 },
+            { id: 'blood_2', category: 'أمراض الدم', name: 'CBC XP300', code: 'VAVA.2457', boxSize: 1200 },
+            { id: 'blood_3', category: 'أمراض الدم', name: 'D DIMER LATEX', code: 'VAVA.2585', boxSize: 60 },
+            { id: 'blood_4', category: 'أمراض الدم', name: 'PT STAGO', code: 'VAVA.2586', boxSize: 300 },
+        ];
+
+        const app = {
+            cart: [],
+            searchTerm: '',
+            selectedCategory: '',
+            currentView: 'browse',
+
+            init() {
+                this.loadCart();
+                this.render();
+                this.attachEvents();
+            },
+
+            loadCart() {
+                const saved = localStorage.getItem('labRequisition');
+                if (saved) {
+                    try {
+                        this.cart = JSON.parse(saved);
+                    } catch(e) {
+                        console.error('خطأ في تحميل البيانات');
+                    }
+                }
+            },
+
+            saveCart() {
+                localStorage.setItem('labRequisition', JSON.stringify(this.cart));
+            },
+
+            getCategories() {
+                return ['', ...new Set(allItems.map(i => i.category))];
+            },
+
+            getFilteredItems() {
+                return allItems.filter(item => {
+                    const matchCat = !this.selectedCategory || item.category === this.selectedCategory;
+                    const matchSearch = !this.searchTerm || 
+                        item.name.includes(this.searchTerm) || 
+                        item.code.includes(this.searchTerm);
+                    return matchCat && matchSearch;
+                });
+            },
+
+            addToCart(itemId) {
+                const item = allItems.find(i => i.id === itemId);
+                if (!item) return;
+
+                const existing = this.cart.find(c => c.id === itemId);
+                if (existing) {
+                    existing.quantity += 1;
+                } else {
+                    this.cart.push({ ...item, quantity: 1 });
+                }
+                
+                this.saveCart();
+                this.render();
+            },
+
+            updateQuantity(itemId, quantity) {
+                const item = this.cart.find(c => c.id === itemId);
+                if (!item) return;
+                
+                if (quantity <= 0) {
+                    this.removeFromCart(itemId);
+                } else {
+                    item.quantity = quantity;
+                }
+                
+                this.saveCart();
+                this.render();
+            },
+
+            removeFromCart(itemId) {
+                this.cart = this.cart.filter(c => c.id !== itemId);
+                this.saveCart();
+                this.render();
+            },
+
+            calculateTotal(item) {
+                if (!item.boxSize || typeof item.boxSize === 'string') {
+                    return `${item.quantity} ${item.boxSize || 'وحدة'}`;
+                }
+                return (item.quantity * item.boxSize).toLocaleString('ar-SA');
+            },
+
+            printRequisition() {
+                const now = new Date();
+                const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+                const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                const dateStr = now.toLocaleDateString('en-US', dateOptions);
+                const timeStr = now.toLocaleTimeString('en-US', timeOptions);
+                
+                const html = `
+                    <!DOCTYPE html>
+                    <html dir="rtl" lang="ar">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>طلب المستهلكات</title>
+                        <style>
+                            body { 
+                                font-family: Arial, sans-serif; 
+                                margin: 20px; 
+                                background: white;
+                            }
+                            
+                            .container { 
+                                max-width: 800px; 
+                                margin: 0 auto; 
+                            }
+                            
+                            .ministry-header {
+                                text-align: center;
+                                border-bottom: 2px solid #333;
+                                padding-bottom: 10px;
+                                margin-bottom: 15px;
+                            }
+                            
+                            .ministry-header p {
+                                margin: 3px 0;
+                                font-weight: bold;
+                                font-size: 13px;
+                            }
+                            
+                            .main-title {
+                                text-align: center;
+                                margin: 15px 0;
+                            }
+                            
+                            .main-title h1 {
+                                color: #0369a1;
+                                font-size: 24px;
+                                margin: 10px 0;
+                                border-bottom: 3px solid #0369a1;
+                                padding-bottom: 10px;
+                            }
+                            
+                            .info-section {
+                                margin: 15px 0;
+                                padding: 10px;
+                                border: 1px solid #ddd;
+                            }
+                            
+                            .info-row {
+                                display: flex;
+                                justify-content: space-between;
+                                margin: 5px 0;
+                                font-size: 12px;
+                            }
+                            
+                            .info-label {
+                                font-weight: bold;
+                                width: 40%;
+                            }
+                            
+                            table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                margin: 20px 0;
+                                border: 2px solid #0369a1;
+                            }
+                            
+                            th { 
+                                background: #0369a1; 
+                                color: white; 
+                                padding: 12px; 
+                                text-align: right; 
+                                font-weight: bold;
+                                border: 1px solid #0369a1;
+                            }
+                            
+                            td { 
+                                border: 1px solid #ddd; 
+                                padding: 10px; 
+                                text-align: right;
+                                font-size: 12px;
+                            }
+                            
+                            tbody tr:nth-child(even) {
+                                background: #f9f9f9;
+                            }
+                            
+                            .signature-section {
+                                display: flex;
+                                justify-content: flex-end;
+                                margin-top: 50px;
+                                padding-top: 20px;
+                            }
+                            
+                            .signature-box {
+                                text-align: center;
+                                width: 40%;
+                            }
+                            
+                            .signature-line {
+                                border-top: 2px solid #333;
+                                width: 100%;
+                                height: 60px;
+                                margin: 10px 0;
+                            }
+                            
+                            .signature-label {
+                                font-weight: bold;
+                                font-size: 12px;
+                                margin-top: 10px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <!-- رأس الوزارة والمستشفى -->
+                            <div class="ministry-header">
+                                <p>المملكة العربية السعودية</p>
+                                <p>وزارة الصحة</p>
+                                <p>تجمع عسير الصحي</p>
+                                <p>مختبر مستشفى سبت العلاية العام</p>
+                            </div>
+                            
+                            <!-- العنوان الرئيسي -->
+                            <div class="main-title">
+                                <h1>طلب المستهلكات والمواد</h1>
+                                <p style="color: #666; font-size: 12px;">قسم المختبرات الطبية</p>
+                            </div>
+                            
+                            <!-- معلومات الطلب -->
+                            <div class="info-section">
+                                <div class="info-row">
+                                    <span class="info-label">التاريخ:</span>
+                                    <span>${dateStr}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">الوقت:</span>
+                                    <span>${timeStr}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- جدول الطلبية -->
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>اسم المادة/الاختبار</th>
+                                        <th>الفئة</th>
+                                        <th>الكود</th>
+                                        <th>الكمية</th>
+                                        <th>حجم العبوة</th>
+                                        <th>الإجمالي</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${this.cart.map((item, idx) => `
+                                        <tr>
+                                            <td>${idx + 1}</td>
+                                            <td><strong>${item.name}</strong></td>
+                                            <td>${item.category}</td>
+                                            <td>${item.code}</td>
+                                            <td>${item.quantity}</td>
+                                            <td>${item.boxSize || '-'}</td>
+                                            <td><strong>${this.calculateTotal(item)}</strong></td>
+                                        </tr>
+                                    `).join('')}
+                                    <tr style="background: #e0f2fe; font-weight: bold;">
+                                        <td colspan="6" style="text-align: center;">إجمالي البنود</td>
+                                        <td>${this.cart.length}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <!-- توقيع واحد فقط -->
+                            <div class="signature-section">
+                                <div class="signature-box">
+                                    <p style="font-weight: bold;">التوقيع</p>
+                                    <div class="signature-line"></div>
+                                    <div class="signature-label">سعد علي سعد القرني</div>
+                                    <div style="font-size: 11px; color: #666; margin-top: 5px;">رئيس قسم المختبرات</div>
+                                </div>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `;
+
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(html);
+                printWindow.document.close();
+                setTimeout(() => printWindow.print(), 250);
+            },
+
+            exportCSV() {
+                if (this.cart.length === 0) return;
+                
+                const now = new Date();
+                const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+                const timeOptions = { hour: '2-digit', minute: '2-digit' };
+                const dateStr = now.toLocaleDateString('en-US', dateOptions);
+                const timeStr = now.toLocaleTimeString('en-US', timeOptions);
+                
+                const rows = [
+                    ['وزارة الصحة - تجمع عسير الصحي - مختبر مستشفى سبت العلاية العام'],
+                    ['طلب المستهلكات والمواد - قسم المختبرات'],
+                    [],
+                    ['التاريخ:', dateStr],
+                    ['الوقت:', timeStr],
+                    [],
+                    ['#', 'المادة', 'الفئة', 'الكود', 'الكمية', 'حجم العبوة', 'الإجمالي'],
+                    ...this.cart.map((item, idx) => [
+                        idx + 1,
+                        item.name,
+                        item.category,
+                        item.code,
+                        item.quantity,
+                        item.boxSize || '-',
+                        this.calculateTotal(item)
+                    ]),
+                    [],
+                    ['إجمالي البنود:', this.cart.length]
+                ];
+
+                const csv = rows.map(row => row.join('\t')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                const timestamp = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+                link.download = `lab_requisition_${timestamp}.csv`;
+                link.click();
+            },
+
+            render() {
+                const html = `
+                    <div class="header no-print">
+                        <div class="container" style="padding: 1rem 0;">
+                            <div style="text-align: center; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 2px solid #0369a1;">
+                                <p style="margin: 0; font-weight: 700; color: #001f3f;">وزارة الصحة - تجمع عسير الصحي</p>
+                                <p style="margin: 3px 0; font-weight: 700; color: #0369a1; font-size: 1rem;">مختبر مستشفى سبت العلاية العام</p>
+                                <p style="margin: 3px 0; font-size: 0.875rem; color: #666;">قسم المختبرات الطبية</p>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="background: #2563eb; color: white; border-radius: 0.5rem; padding: 0.5rem; font-size: 1.5rem;">🧪</div>
+                                    <div>
+                                        <h1 style="font-size: 1.25rem; font-weight: 700; color: #001f3f; margin: 0;">📋 تطبيق إدارة الطلبيات</h1>
+                                        <p style="color: #666; margin: 0; font-size: 0.75rem;">مدير: سعد علي سعد القرني</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary" onclick="app.currentView = app.currentView === 'browse' ? 'cart' : 'browse'; app.render();">
+                                    🛒 الطلبية (${this.cart.length})
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="container" style="padding: 2rem 0;">
+                        ${this.currentView === 'browse' ? this.renderBrowseView() : this.renderCartView()}
+                    </div>
+                `;
+
+                document.getElementById('app').innerHTML = html;
+                this.attachEvents();
+            },
+
+            renderBrowseView() {
+                const categories = this.getCategories();
+                const filteredItems = this.getFilteredItems();
+
+                return `
+                    <div class="card no-print">
+                        <h2 style="font-size: 1.25rem; font-weight: 700; color: #001f3f; margin-bottom: 1rem;">🔍 البحث والتصفية</h2>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">البحث:</label>
+                                <input type="text" id="searchInput" class="input-field" placeholder="ابحث بالاسم أو الكود..." value="${this.searchTerm}">
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">الفئة:</label>
+                                <select id="categorySelect" class="input-field">
+                                    ${categories.map(cat => `
+                                        <option value="${cat}" ${this.selectedCategory === cat ? 'selected' : ''}>
+                                            ${cat || 'جميع الفئات'}
+                                        </option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                        </div>
+
+                        <p style="font-size: 0.875rem; color: #666;">
+                            <strong>${filteredItems.length}</strong> عنصر متاح
+                        </p>
+                    </div>
+
+                    <div class="grid-3" style="margin-top: 2rem;">
+                        ${filteredItems.map(item => `
+                            <div class="item-card">
+                                <p style="font-weight: 700; color: #001f3f; margin-bottom: 0.5rem;">${item.name}</p>
+                                <p style="font-size: 0.875rem; color: #666;">الكود: ${item.code}</p>
+                                
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.75rem 0; font-size: 0.875rem;">
+                                    <span class="badge badge-primary">${item.category}</span>
+                                    ${item.boxSize ? `<span style="color: #666;">العبوة: ${item.boxSize}</span>` : ''}
+                                </div>
+
+                                <button class="btn btn-primary" onclick="app.addToCart('${item.id}'); app.render();" style="width: 100%; margin-top: 0.75rem;">
+                                    ➕ أضف للطلبية
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+
+            renderCartView() {
+                const now = new Date();
+                return `
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+                            <div>
+                                <h2 style="font-size: 1.5rem; font-weight: 700; color: #166534;">📋 ملخص الطلبية</h2>
+                                <p style="color: #666; margin-top: 0.25rem;">
+                                    ${now.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    - ${now.toLocaleTimeString('ar-SA')}
+                                </p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 1.5rem; font-weight: 700; color: #2563eb; margin: 0;">${this.cart.length}</p>
+                                <p style="color: #666; margin: 0; font-size: 0.875rem;">عنصر في الطلبية</p>
+                            </div>
+                        </div>
+
+                        ${this.cart.length === 0 ? `
+                            <div style="text-align: center; padding: 3rem 0;">
+                                <p style="font-size: 3rem; margin-bottom: 0.75rem;">📦</p>
+                                <p style="color: #666; font-size: 1.125rem;">الطلبية فارغة</p>
+                            </div>
+                        ` : `
+                            <div style="overflow-x: auto; margin-bottom: 1.5rem;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>المادة</th>
+                                            <th>الفئة</th>
+                                            <th>الكمية</th>
+                                            <th>حجم العبوة</th>
+                                            <th>الإجمالي</th>
+                                            <th>إزالة</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${this.cart.map((item, idx) => `
+                                            <tr>
+                                                <td>${idx + 1}</td>
+                                                <td>
+                                                    <p style="font-weight: 600; margin: 0;">${item.name}</p>
+                                                    <p style="font-size: 0.875rem; color: #666; margin: 0;">${item.code}</p>
+                                                </td>
+                                                <td><span class="badge badge-primary">${item.category}</span></td>
+                                                <td>
+                                                    <input type="number" min="1" value="${item.quantity}" 
+                                                        onchange="app.updateQuantity('${item.id}', parseInt(this.value)); app.render();"
+                                                        class="input-field" style="width: 60px; padding: 0.25rem 0.5rem;">
+                                                </td>
+                                                <td style="color: #666;">${item.boxSize || '-'}</td>
+                                                <td style="font-weight: 600; color: #2563eb;">${this.calculateTotal(item)}</td>
+                                                <td>
+                                                    <button class="btn btn-danger" onclick="app.removeFromCart('${item.id}'); app.render();" 
+                                                        style="padding: 0.25rem 0.5rem;">🗑️</button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem;">
+                                <button class="btn btn-primary" onclick="app.printRequisition();" style="width: 100%; padding: 0.75rem;">
+                                    🖨️ اطبع الطلبية
+                                </button>
+                                <button class="btn btn-success" onclick="app.exportCSV();" style="width: 100%; padding: 0.75rem;">
+                                    📥 تصدير CSV
+                                </button>
+                                <button class="btn btn-danger" onclick="if(confirm('هل تريد مسح جميع العناصر؟')) { app.cart = []; app.saveCart(); app.render(); }" 
+                                    style="width: 100%; padding: 0.75rem;">
+                                    🔄 مسح الطلبية
+                                </button>
+                                <button class="btn" style="background: #666; color: white; width: 100%; padding: 0.75rem;" 
+                                    onclick="app.currentView = 'browse'; app.render();">
+                                    ⬅️ العودة
+                                </button>
+                            </div>
+                        `}
+                    </div>
+                `;
+            },
+
+            attachEvents() {
+                const searchInput = document.getElementById('searchInput');
+                const categorySelect = document.getElementById('categorySelect');
+
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        this.searchTerm = e.target.value;
+                        this.render();
+                    });
+                }
+
+                if (categorySelect) {
+                    categorySelect.addEventListener('change', (e) => {
+                        this.selectedCategory = e.target.value;
+                        this.render();
+                    });
+                }
+            }
+        };
+
+        // تشغيل التطبيق عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
