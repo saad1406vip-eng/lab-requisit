@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق إدارة طلبات المختبر - سعد القرني</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+            color: #1a202c;
+        }
+        .header {
+            background: white; border-bottom: 3px solid #3b82f6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 50;
+        }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 1rem; }
+        .card {
+            background: white; border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 1.5rem; border-right: 4px solid #3b82f6;
+        }
+        .btn {
+            padding: 0.5rem 1rem; border-radius: 0.5rem;
+            font-weight: 600; cursor: pointer;
+            transition: all 0.3s; border: none;
+        }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-success:hover { background: #15803d; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-whatsapp { background: #25D366; color: white; }
+        .btn-whatsapp:hover { background: #128C7E; }
+        .btn-email { background: #EA4335; color: white; }
+        .btn-email:hover { background: #c5221f; }
+        .input-field {
+            border: 2px solid #d1d5db; border-radius: 0.5rem;
+            padding: 0.5rem 1rem; width: 100%; font-size: 0.95rem;
+        }
+        .input-field:focus {
+            outline: none; border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .badge {
+            display: inline-block; padding: 0.25rem 0.75rem;
+            border-radius: 9999px; font-size: 0.75rem; font-weight: 600;
+        }
+        .watermark {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120px; color: rgba(59, 130, 246, 0.03);
+            font-weight: 900; white-space: nowrap;
+            pointer-events: none; z-index: -1;
+        }
+        .copyright-mark {
+            position: fixed; bottom: 15px; left: 20px;
+            font-size: 0.8rem; color: #999; opacity: 0.6;
+            z-index: -1; pointer-events: none;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .watermark, .copyright-mark { display: none !important; }
+        }
+        .item-card {
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 1rem;
+            border: 1px solid #e5e7eb; border-radius: 0.5rem;
+            margin-bottom: 0.75rem; transition: all 0.2s;
+        }
+        .item-card:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.1); }
+        .item-info { flex: 1; }
+        .item-name { font-weight: 600; color: #1f2937; font-size: 0.95rem; }
+        .item-code { font-size: 0.8rem; color: #6b7280; margin-top: 2px; }
+        .item-actions { display: flex; gap: 0.5rem; align-items: center; }
+        .quantity-input {
+            width: 80px; padding: 0.4rem;
+            border: 1px solid #d1d5db; border-radius: 0.375rem;
+            text-align: center; font-weight: 600;
+        }
+        .filter-bar {
+            display: flex; gap: 0.5rem; flex-wrap: wrap;
+            margin-bottom: 1rem; padding: 0.75rem;
+            background: #f8fafc; border-radius: 0.5rem;
+        }
+        .filter-btn {
+            padding: 0.4rem 0.9rem; border-radius: 9999px;
+            font-size: 0.8rem; font-weight: 600;
+            cursor: pointer; border: 1px solid #cbd5e1;
+            background: white; transition: all 0.2s;
+        }
+        .filter-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
+        .filter-btn:hover { background: #dbeafe; }
+        .filter-btn.active:hover { background: #1d4ed8; }
+        .summary-box {
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+            border-radius: 0.5rem; padding: 1rem;
+            margin-bottom: 1rem; border-right: 4px solid #2563eb;
+        }
+        .toast {
+            position: fixed; bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937; color: white;
+            padding: 0.75rem 1.5rem; border-radius: 0.5rem;
+            z-index: 1000; opacity: 0; transition: opacity 0.3s;
+            font-weight: 600;
+        }
+        .toast.show { opacity: 1; }
+        .empty-state { text-align: center; padding: 3rem; color: #9ca3af; font-size: 1.1rem; }
+        .total-amount {
+            background: #065f46; color: white;
+            padding: 0.75rem 1.5rem; border-radius: 0.5rem;
+            font-weight: 700; text-align: center;
+        }
+        .new-badge {
+            background: #f59e0b; color: white;
+            padding: 2px 6px; border-radius: 4px;
+            font-size: 0.65rem; font-weight: 700;
+            margin-right: 4px;
+        }
+        .updated-badge {
+            background: #8b5cf6; color: white;
+            padding: 2px 6px; border-radius: 4px;
+            font-size: 0.65rem; font-weight: 700;
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">سعد القرني</div>
+    <div class="copyright-mark">© 2026 سعد القرني</div>
+    <div id="app"></div>
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // قاعدة البيانات الشاملة - محدثة من ملف روش (Roche) الرسمي
+        // آخر تحديث: أكتوبر 2026
+        // ═══════════════════════════════════════════════════════════════
+        const allItems = [
+            // ═══════════════════════════════════════════════════════════
+            // 1️⃣ اختبارات بيور - كيمياء عامة (Chemistry - c303)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'bio_1', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Glucose (GLUC3)', code: 'GLUC3', govCode: '787803883', nupco: '4111620006800', nupcoTrade: '4111620006801', rocheCatalog: '08057800190', boxSize: 3300, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_2', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Urea (UREAL)', code: 'UREAL', govCode: '787803925', nupco: '4111620011300', nupcoTrade: '4111620011301', rocheCatalog: '08058806190', boxSize: 600, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_3', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Creatinine Jaffe (CREAJ2)', code: 'CREAJ2', govCode: '787804028', nupco: '4120210214000', nupcoTrade: '4120210214001', rocheCatalog: '08057532190', boxSize: 2500, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_4', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Uric Acid (UA2)', code: 'UA2', govCode: '787803895', nupco: '4111620008100', nupcoTrade: '4111620008101', rocheCatalog: '08058750190', boxSize: 1300, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_5', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Total Protein (TP2)', code: 'TP2', govCode: '787803923', nupco: '4111620011100', nupcoTrade: '4111620011101', rocheCatalog: '08058652190', boxSize: 1050, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_6', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Albumin (ALB2)', code: 'ALB2', govCode: '787803958', nupco: '4114180100300', nupcoTrade: '4114180100301', rocheCatalog: '08056692190', boxSize: 750, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_7', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'ALT (ALTP2)', code: 'ALTP2', govCode: '787803879', nupco: '4111620006200', nupcoTrade: '4111620006201', rocheCatalog: '08104697190', boxSize: 800, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_8', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'AST (ASTP)', code: 'ASTP', govCode: '787803924', nupco: '4111620011200', nupcoTrade: '4111620011201', rocheCatalog: '08056838190', boxSize: 500, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_9', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Total Bilirubin (BILT3)', code: 'BILT3', govCode: '787803892', nupco: '4111620007800', nupcoTrade: '4111620007801', rocheCatalog: '08056960190', boxSize: 1050, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_10', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Direct Bilirubin (BILD2)', code: 'BILD2', govCode: '787803920', nupco: '4111620010800', nupcoTrade: '4111620010801', rocheCatalog: '08056951190', boxSize: 1000, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_11', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'GGT (GGT-2)', code: 'GGT-2', govCode: '787803882', nupco: '4111620006700', nupcoTrade: '4111620006701', rocheCatalog: '08057796190', boxSize: 400, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_12', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'ALP (ALP2)', code: 'ALP2', govCode: '787803125', nupco: '4111600411600', nupcoTrade: '4111600411603', rocheCatalog: '08056757190', boxSize: 1100, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_13', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Lipase (LIPC)', code: 'LIPC', govCode: '787803885', nupco: '4111620007000', nupcoTrade: '4111620007001', rocheCatalog: '08057982190', boxSize: 200, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_14', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Amylase (AMYL2)', code: 'AMYL2', govCode: '787803888', nupco: '4111620007300', nupcoTrade: '4111620007301', rocheCatalog: '08056811190', boxSize: 750, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_15', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'LDH (LDHI2)', code: 'LDHI2', govCode: '787803877', nupco: '4111620005800', nupcoTrade: '4111620005801', rocheCatalog: '08057958190', boxSize: 850, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_16', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'CK (Creatine Kinase)', code: 'CK', govCode: '787803889', nupco: '4111620007400', nupcoTrade: '4111620007401', rocheCatalog: '08057460190', boxSize: 500, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_17', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'CK-MB (CKMB)', code: 'CKMB', govCode: '787804027', nupco: '4120210213900', nupcoTrade: '4120210213901', rocheCatalog: '08057486190', boxSize: 150, unit: 'اختبار', calName: 'C.f.a.s. CK-MB', calCatalog: '11447394216', qcName: 'Precinorm CK-MB', qcCatalog: '11447378122' },
+            { id: 'bio_18', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Cholesterol (CHOL2)', code: 'CHOL2', govCode: '787803873', nupco: '4111620005400', nupcoTrade: '4111620005401', rocheCatalog: '08057443190', boxSize: 2600, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_19', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Triglycerides (TRIGL)', code: 'TRIGL', govCode: '787803894', nupco: '4111620008000', nupcoTrade: '4111620008001', rocheCatalog: '08058687190', boxSize: 1000, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_20', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'HDL-C (HDLC4)', code: 'HDLC4', govCode: '787803875', nupco: '4111620005600', nupcoTrade: '4111620005601', rocheCatalog: '08057877190', boxSize: 700, unit: 'اختبار', calName: 'C.f.a.s. Lipids', calCatalog: '12172623122', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_21', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'LDL-C (LDLC3)', code: 'LDLC3', govCode: '787803878', nupco: '4111620006000', nupcoTrade: '4111620006001', rocheCatalog: '08057966190', boxSize: 600, unit: 'اختبار', calName: 'C.f.a.s. Lipids', calCatalog: '12172623122', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_22', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Calcium (CA2)', code: 'CA2', govCode: '787803940', nupco: '4111620017500', nupcoTrade: '4111620017501', rocheCatalog: '08057427190', boxSize: 1500, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_23', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Phosphorus (PHOS2)', code: 'PHOS2', govCode: '787803921', nupco: '4111620010900', nupcoTrade: '4111620010901', rocheCatalog: '08058610190', boxSize: 750, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_24', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Magnesium (MG2)', code: 'MG2', govCode: '787803922', nupco: '4111620011000', nupcoTrade: '4111620011001', rocheCatalog: '08058016190', boxSize: 690, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_25', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Iron (IRON2)', code: 'IRON2', govCode: '787803876', nupco: '4111620005700', nupcoTrade: '4111620005701', rocheCatalog: '08057931190', boxSize: 700, unit: 'اختبار', calName: 'C.f.a.s.', calCatalog: '10759350190', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_26', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'UIBC (Unsaturated Iron Binding Capacity)', code: 'UIBC', govCode: '787803893', nupco: '4111620007900', nupcoTrade: '4111620007901', rocheCatalog: '08058776190', boxSize: 100, unit: 'اختبار', calName: 'Iron Standard', calCatalog: '12146401216', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_27', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Ammonia (NH3L2)', code: 'NH3L2', govCode: '787803886', nupco: '4111620007100', nupcoTrade: '4111620007101', rocheCatalog: '08058024190', boxSize: 300, unit: 'اختبار', calName: 'Ammonia/Ethanol/CO2 Calibrator', calCatalog: '20751995190', qcName: 'Ammonia Control N/A', qcCatalog: '20752401190 / 20753009190' },
+            { id: 'bio_28', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'CRP (CRP4)', code: 'CRP4', govCode: '787808649', nupco: '4111620021600', nupcoTrade: '4111620021601', rocheCatalog: '08057591190', boxSize: 500, unit: 'اختبار', calName: 'C.f.a.s. Proteins', calCatalog: '11355279216', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'bio_29', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'HbA1c (A1CX3)', code: 'A1CX3', govCode: '787803884', nupco: '4111620006900', nupcoTrade: '4111620006901', rocheCatalog: '08056668190', boxSize: 500, unit: 'اختبار', calName: 'C.f.a.s. HbA1c', calCatalog: '04528417190', qcName: 'PreciControl HbA1c norm/path', qcCatalog: '05479207190 / 05912504190' },
+            { id: 'bio_30', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Microalbumin (ALBT2)', code: 'ALBT2', govCode: '787803934', nupco: '4111620016600', nupcoTrade: '4111620016601', rocheCatalog: '08056722190', boxSize: 500, unit: 'اختبار', calName: 'C.f.a.s. PUC', calCatalog: '03121305122', qcName: 'Precinorm PUC / Precipath PUC', qcCatalog: '03121291122 / 03121313122' },
+            { id: 'bio_31', category: 'اختبارات بيور', subCategory: 'كيمياء عامة c303', name: 'Total Protein Urine/CSF (TPUC3)', code: 'TPUC3', govCode: '787808590', nupco: '4111620026200', nupcoTrade: '4111620026201', rocheCatalog: '08058679190', boxSize: 650, unit: 'اختبار', calName: 'C.f.a.s. PUC', calCatalog: '03121305122', qcName: 'Precinorm PUC / Precipath PUC', qcCatalog: '03121291122 / 03121313122' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 2️⃣ اختبارات بيور - ISE (أيونات الدم)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'ise_1', category: 'اختبارات بيور', subCategory: 'أيونات ISE', name: 'Sodium (ISE)', code: 'Na-ISE', govCode: '787803143', nupco: '4111600418900', nupcoTrade: '4111600418902', rocheCatalog: 'انظر ورقة القطع', boxSize: null, unit: 'اختبار', calName: 'ISE Standard Low/High', calCatalog: '11183974216 / 11183982216', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'ise_2', category: 'اختبارات بيور', subCategory: 'أيونات ISE', name: 'Potassium (ISE)', code: 'K-ISE', govCode: '787803129', nupco: '4111600413500', nupcoTrade: '4111600413502', rocheCatalog: 'انظر ورقة القطع', boxSize: null, unit: 'اختبار', calName: 'ISE Standard Low/High', calCatalog: '11183974216 / 11183982216', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+            { id: 'ise_3', category: 'اختبارات بيور', subCategory: 'أيونات ISE', name: 'Chloride (ISE)', code: 'Cl-ISE', govCode: '787803113', nupco: '4111600401900', nupcoTrade: '4111600401902', rocheCatalog: 'انظر ورقة القطع', boxSize: null, unit: 'اختبار', calName: 'ISE Standard Low/High', calCatalog: '11183974216 / 11183982216', qcName: 'PreciControl ClinChem Multi 1/2', qcCatalog: '05117003190 / 05117216190' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 3️⃣ اختبارات بيور - هرمونات (e402)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'horm_1', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'TSH', code: 'TSH', govCode: '787808592', nupco: '4111620020800', nupcoTrade: '4111620020801', rocheCatalog: '08443432190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys TSH CalSet', calCatalog: '08443459190', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_2', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'FT4 IV', code: 'FT4', govCode: '787803972', nupco: '4114195300200', nupcoTrade: '4114195300201', rocheCatalog: '09043284190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys FT4 IV CalSet', calCatalog: '07976879190', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_3', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'FT3 III', code: 'FT3', govCode: '787803915', nupco: '4111620010200', nupcoTrade: '4111620010201', rocheCatalog: '09005811190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys FT3 III CalSet', calCatalog: '09077871190', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_4', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'HCG+β (Beta HCG)', code: 'HCG+β', govCode: '787805558', nupco: '4118160101800', nupcoTrade: '4118160101801', rocheCatalog: '07251025190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys HCG+β CalSet II', calCatalog: '03302652190', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_5', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Prolactin II', code: 'Prolactin', govCode: '787803941', nupco: '4111620017600', nupcoTrade: '4111620017601', rocheCatalog: '07027737190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Prolactin II CalSet', calCatalog: '03277356190', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_6', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'LH', code: 'LH', govCode: '787803949', nupco: '4114000094400', nupcoTrade: '4114000094401', rocheCatalog: '07027575190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys LH II CalSet', calCatalog: '03561097190', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_7', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'FSH', code: 'FSH', govCode: '787803916', nupco: '4111620010300', nupcoTrade: '4111620010301', rocheCatalog: '08932387190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys FSH II CalSet', calCatalog: '03032680122', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_8', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Testosterone II', code: 'Testosterone', govCode: '787803891', nupco: '4111620007600', nupcoTrade: '4111620007601', rocheCatalog: '08946370190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Testosterone II CalSet II', calCatalog: '05202230190', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_9', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Estradiol III', code: 'Estradiol', govCode: '787803890', nupco: '4111620007500', nupcoTrade: '4111620007501', rocheCatalog: '07027249190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Estradiol III CalSet', calCatalog: '06656048190', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_10', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Progesterone III', code: 'Progesterone', govCode: '787803881', nupco: '4111620006600', nupcoTrade: '4111620006601', rocheCatalog: '07027699190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Progesterone III CalSet', calCatalog: '07092547190', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_11', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Cortisol II', code: 'Cortisol', govCode: '787803874', nupco: '4111620005500', nupcoTrade: '4111620005501', rocheCatalog: '07027150190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Cortisol II CalSet', calCatalog: '06687750190', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_12', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'DHEA-S', code: 'DHEA-S', govCode: '787803973', nupco: '4114195300300', nupcoTrade: '4114195300301', rocheCatalog: '07027192190', boxSize: 100, unit: 'اختبار', calName: 'Elecsys DHEA-S CalSet', calCatalog: '03000095122', qcName: 'PreciControl Universal', qcCatalog: '11731416190' },
+            { id: 'horm_13', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'PTH (Parathyroid Hormone)', code: 'PTH', govCode: '787803880', nupco: '4111620006500', nupcoTrade: '4111620006501', rocheCatalog: '07251068190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys PTH CalSet', calCatalog: '08243875190', qcName: 'PreciControl Varia', qcCatalog: '05618860190' },
+            { id: 'horm_14', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Insulin', code: 'Insulin', govCode: '787803896', nupco: '4111620008200', nupcoTrade: '4111620008201', rocheCatalog: '07027559190', boxSize: 100, unit: 'اختبار', calName: 'Elecsys Insulin CalSet', calCatalog: '12017504122', qcName: 'PreciControl Multimarker', qcCatalog: '05341787190' },
+            { id: 'horm_15', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'C-Peptide', code: 'C-Peptide', govCode: '787803902', nupco: '4111620008900', nupcoTrade: '4111620008901', rocheCatalog: '07027168190', boxSize: 100, unit: 'اختبار', calName: 'Elecsys C-Peptide CalSet', calCatalog: '03184919190', qcName: 'PreciControl Multimarker', qcCatalog: '05341787190' },
+            { id: 'horm_16', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Total PSA', code: 'PSA Total', govCode: '787805545', nupco: '4118160100400', nupcoTrade: '4118160100401', rocheCatalog: '08791732190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Total PSA CalSet II', calCatalog: '08838534190', qcName: 'PreciControl Tumor Marker', qcCatalog: '11776452122' },
+            { id: 'horm_17', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Vitamin B12 II', code: 'Vitamin B12', govCode: '787803907', nupco: '4111620009400', nupcoTrade: '4111620009401', rocheCatalog: '07028121190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Vitamin B12 II CalSet', calCatalog: '07212780190', qcName: 'PreciControl Anemia', qcCatalog: '04415299190' },
+            { id: 'horm_18', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Vitamin D total III', code: 'Vitamin D', govCode: '787803919', nupco: '4111620010600', nupcoTrade: '4111620010601', rocheCatalog: '09038086190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Vitamin D total III CalSet', calCatalog: '09038116190', qcName: 'PreciControl Vitamin D total III', qcCatalog: '09038124190' },
+            { id: 'horm_19', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Folate III', code: 'Folate', govCode: '787808591', nupco: '4111620026000', nupcoTrade: '4111620026001', rocheCatalog: '08324174190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Folate III CalSet', calCatalog: '07560001190', qcName: 'PreciControl Anemia', qcCatalog: '04415299190' },
+            { id: 'horm_20', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Ferritin', code: 'Ferritin', govCode: '787803927', nupco: '4111620015300', nupcoTrade: '4111620015301', rocheCatalog: '07027273190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Ferritin CalSet', calCatalog: '03737586190', qcName: 'PreciControl Anemia', qcCatalog: '04415299190' },
+            { id: 'horm_21', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'AFP', code: 'AFP', govCode: '787803898', nupco: '4111620008500', nupcoTrade: '4111620008501', rocheCatalog: '09015124190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys AFP II CalSet', calCatalog: '09227261190', qcName: 'PreciControl Tumor Marker', qcCatalog: '11776452122' },
+            { id: 'horm_22', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'CA 125 II', code: 'CA-125', govCode: '787804004', nupco: '4118160099500', nupcoTrade: '4118160099502', rocheCatalog: '07026986190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys CA 125 II CalSet', calCatalog: '07030207190', qcName: 'PreciControl Tumor Marker', qcCatalog: '11776452122' },
+            { id: 'horm_23', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'CA 15-3 II', code: 'CA 15-3', govCode: '787805538', nupco: '4118160099600', nupcoTrade: '4118160099601', rocheCatalog: '07027001190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys CA 15-3 II CalSet', calCatalog: '03045846122', qcName: 'PreciControl Tumor Marker', qcCatalog: '11776452122' },
+            { id: 'horm_24', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'CA 19-9', code: 'CA 19-9', govCode: '787805557', nupco: '4118160101700', nupcoTrade: '4118160101701', rocheCatalog: '07027028190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys CA 19-9 CalSet', calCatalog: '11776215122', qcName: 'PreciControl Tumor Marker', qcCatalog: '11776452122' },
+            { id: 'horm_25', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'CA 72-4', code: 'CA 72-4', govCode: '787804042', nupco: '4120210215500', nupcoTrade: '4120210215501', rocheCatalog: '09005706190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys CA 72-4 CalSet', calCatalog: '11776274122', qcName: 'PreciControl Tumor Marker', qcCatalog: '11776452122' },
+            { id: 'horm_26', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'CEA', code: 'CEA', govCode: '787805539', nupco: '4118160099700', nupcoTrade: '4118160099701', rocheCatalog: '07027079190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys CEA CalSet', calCatalog: '11731645322', qcName: 'PreciControl Tumor Marker', qcCatalog: '11776452122' },
+            { id: 'horm_27', category: 'اختبارات بيور', subCategory: 'هرمونات e402', name: 'Troponin I', code: 'TnI', govCode: '787803913', nupco: '4111620010000', nupcoTrade: '4111620010001', rocheCatalog: '07028059190', boxSize: 300, unit: 'اختبار', calName: 'Elecsys Troponin I CalSet', calCatalog: '05094828190', qcName: 'PreciControl Troponin', qcCatalog: '05095107190' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 4️⃣ اختبارات بيور - فيروسات وسيرولوجي (e402)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'sero_1', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'HBsAg II', code: 'HBsAg', govCode: '787805555', nupco: '4118160101500', nupcoTrade: '4118160101501', rocheCatalog: '08814848190', boxSize: 300, unit: 'اختبار', calName: 'مدمج بالكاشف', calCatalog: '—', qcName: 'PreciControl HBsAg II', qcCatalog: '04687876190' },
+            { id: 'sero_2', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'Anti-HBs II', code: 'Anti-HBs', govCode: '787805553', nupco: '4118160101200', nupcoTrade: '4118160101201', rocheCatalog: '08498610190', boxSize: 300, unit: 'اختبار', calName: 'مدمج بالكاشف', calCatalog: '—', qcName: 'PreciControl Anti-HBs', qcCatalog: '11876317122' },
+            { id: 'sero_3', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'Anti-HBc Total', code: 'Anti-HBc', govCode: '787805550', nupco: '4118160100900', nupcoTrade: '4118160100901', rocheCatalog: '09014926190', boxSize: 300, unit: 'اختبار', calName: 'مدمج بالكاشف', calCatalog: '—', qcName: 'PreciControl Anti-HBc', qcCatalog: '04927931190' },
+            { id: 'sero_4', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'Anti-HCV II', code: 'Anti-HCV', govCode: '787805554', nupco: '4118160101400', nupcoTrade: '4118160101401', rocheCatalog: '08837058190', boxSize: 300, unit: 'اختبار', calName: 'مدمج بالكاشف', calCatalog: '—', qcName: 'PreciControl Anti-HCV', qcCatalog: '03290379190' },
+            { id: 'sero_5', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'HIV Duo', code: 'HIV Duo', govCode: '787805549', nupco: '4118160100800', nupcoTrade: '4118160100801', rocheCatalog: '08836973190', boxSize: 300, unit: 'اختبار', calName: 'مدمج بالكاشف', calCatalog: '—', qcName: 'PreciControl HIV Gen II / HIV-2+GrpO', qcCatalog: '06924107190 / 06924115190' },
+            { id: 'sero_6', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'Syphilis', code: 'Syphilis', govCode: '787805556', nupco: '4118160101600', nupcoTrade: '4118160101601', rocheCatalog: '09015051190', boxSize: 300, unit: 'اختبار', calName: 'مدمج بالكاشف', calCatalog: '—', qcName: 'PreciControl Syphilis', qcCatalog: '06923364190' },
+            { id: 'sero_7', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'Toxo IgG', code: 'Toxo IgG', govCode: '787805562', nupco: '4118160102200', nupcoTrade: '4118160102201', rocheCatalog: '07028008190', boxSize: 300, unit: 'اختبار', calName: 'مدمج بالكاشف', calCatalog: '—', qcName: 'PreciControl Toxo IgG', qcCatalog: '04618823190' },
+            { id: 'sero_8', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'Toxo IgM', code: 'Toxo IgM', govCode: '787805563', nupco: '4118160102300', nupcoTrade: '4118160102301', rocheCatalog: '07028024190', boxSize: 300, unit: 'اختبار', calName: 'مدمج بالكاشف', calCatalog: '—', qcName: 'PreciControl Toxo IgM', qcCatalog: '04618866190' },
+            { id: 'sero_9', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'Rubella IgG', code: 'Rubella IgG', govCode: '787805570', nupco: '4118160103100', nupcoTrade: '4118160103101', rocheCatalog: '07027770190', boxSize: 300, unit: 'اختبار', calName: 'مدمج بالكاشف', calCatalog: '—', qcName: 'PreciControl Rubella IgG', qcCatalog: '04618807190' },
+            { id: 'sero_10', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'Rubella IgM', code: 'Rubella IgM', govCode: '787805569', nupco: '4118160103000', nupcoTrade: '4118160103001', rocheCatalog: '07027796190', boxSize: 300, unit: 'اختبار', calName: 'مدمج بالكاشف', calCatalog: '—', qcName: 'PreciControl Rubella IgM', qcCatalog: '04618840190' },
+            { id: 'sero_11', category: 'اختبارات بيور', subCategory: 'فيروسات وسيرولوجي e402', name: 'Elecsys Malaria', code: 'Malaria', govCode: '', nupco: '', nupcoTrade: '', rocheCatalog: '', boxSize: null, unit: 'اختبار', calName: '—', calCatalog: '—', qcName: '—', qcCatalog: '—' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 5️⃣ اختبارات بيور - معايرات (Calibrators)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'cal_1', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'C.f.a.s. (Calibrator for automated systems)', code: 'CFAS', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '10759350190', boxSize: null, unit: 'علبة', notes: 'يشمل: Glucose، Urea، Creatinine، Uric Acid، TP، Albumin، ALT، AST، Bilirubin، GGT، ALP، Lipase، Amylase، LDH، CK، Cholesterol، Triglycerides، Ca، Phos، Mg، Iron' },
+            { id: 'cal_2', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'C.f.a.s. Lipids', code: 'Lipid Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '12172623122', boxSize: null, unit: 'علبة', notes: 'HDL-C، LDL-C' },
+            { id: 'cal_3', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'C.f.a.s. CK-MB', code: 'MB Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11447394216', boxSize: null, unit: 'علبة', notes: 'CK-MB' },
+            { id: 'cal_4', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'C.f.a.s. Proteins', code: 'Protein Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11355279216', boxSize: null, unit: 'علبة', notes: 'CRP' },
+            { id: 'cal_5', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Iron Standard', code: 'Fe Standard', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '12146401216', boxSize: null, unit: 'علبة', notes: 'UIBC' },
+            { id: 'cal_6', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Ammonia/Ethanol/CO2 Calibrator', code: 'AMM Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '20751995190', boxSize: null, unit: 'علبة', notes: 'Ammonia' },
+            { id: 'cal_7', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'C.f.a.s. HbA1c', code: 'A1c Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04528417190', boxSize: null, unit: 'علبة', notes: 'HbA1c' },
+            { id: 'cal_8', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'C.f.a.s. PUC', code: 'PUC Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03121305122', boxSize: null, unit: 'علبة', notes: 'Microalbumin، Total Protein Urine/CSF' },
+            { id: 'cal_9', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'ISE Standard Low', code: 'ISE Low', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11183974216', boxSize: null, unit: 'علبة', notes: 'Na, K, Cl' },
+            { id: 'cal_10', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'ISE Standard High', code: 'ISE High', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11183982216', boxSize: null, unit: 'علبة', notes: 'Na, K, Cl' },
+            { id: 'cal_11', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys TSH CalSet', code: 'TSH Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08443459190', boxSize: null, unit: 'علبة', notes: 'TSH' },
+            { id: 'cal_12', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys FT4 IV CalSet', code: 'FT4 Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '07976879190', boxSize: null, unit: 'علبة', notes: 'FT4' },
+            { id: 'cal_13', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys FT3 III CalSet', code: 'FT3 Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '09077871190', boxSize: null, unit: 'علبة', notes: 'FT3' },
+            { id: 'cal_14', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys HCG+β CalSet II', code: 'HCG Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03302652190', boxSize: null, unit: 'علبة', notes: 'HCG+β' },
+            { id: 'cal_15', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Prolactin II CalSet', code: 'Prolactin Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03277356190', boxSize: null, unit: 'علبة', notes: 'Prolactin' },
+            { id: 'cal_16', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys LH II CalSet', code: 'LH Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03561097190', boxSize: null, unit: 'علبة', notes: 'LH' },
+            { id: 'cal_17', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys FSH II CalSet', code: 'FSH Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03032680122', boxSize: null, unit: 'علبة', notes: 'FSH' },
+            { id: 'cal_18', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Testosterone II CalSet II', code: 'Testo Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05202230190', boxSize: null, unit: 'علبة', notes: 'Testosterone' },
+            { id: 'cal_19', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Estradiol III CalSet', code: 'E2 Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '06656048190', boxSize: null, unit: 'علبة', notes: 'Estradiol' },
+            { id: 'cal_20', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Progesterone III CalSet', code: 'Prog Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '07092547190', boxSize: null, unit: 'علبة', notes: 'Progesterone' },
+            { id: 'cal_21', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Cortisol II CalSet', code: 'Cortisol Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '06687750190', boxSize: null, unit: 'علبة', notes: 'Cortisol' },
+            { id: 'cal_22', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys DHEA-S CalSet', code: 'DHEA-S Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03000095122', boxSize: null, unit: 'علبة', notes: 'DHEA-S' },
+            { id: 'cal_23', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys PTH CalSet', code: 'PTH Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08243875190', boxSize: null, unit: 'علبة', notes: 'PTH' },
+            { id: 'cal_24', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Insulin CalSet', code: 'Insulin Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '12017504122', boxSize: null, unit: 'علبة', notes: 'Insulin' },
+            { id: 'cal_25', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys C-Peptide CalSet', code: 'C-Pep Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03184919190', boxSize: null, unit: 'علبة', notes: 'C-Peptide' },
+            { id: 'cal_26', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Total PSA CalSet II', code: 'PSA Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08838534190', boxSize: null, unit: 'علبة', notes: 'PSA Total' },
+            { id: 'cal_27', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Vitamin B12 II CalSet', code: 'VB12 Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '07212780190', boxSize: null, unit: 'علبة', notes: 'Vitamin B12' },
+            { id: 'cal_28', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Folate III CalSet', code: 'Folate Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '07560001190', boxSize: null, unit: 'علبة', notes: 'Folate' },
+            { id: 'cal_29', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Ferritin CalSet', code: 'Ferritin Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03737586190', boxSize: null, unit: 'علبة', notes: 'Ferritin' },
+            { id: 'cal_30', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Vitamin D total III CalSet', code: 'VitD Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '09038116190', boxSize: null, unit: 'علبة', notes: 'Vitamin D total' },
+            { id: 'cal_31', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys AFP II CalSet', code: 'AFP Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '09227261190', boxSize: null, unit: 'علبة', notes: 'AFP' },
+            { id: 'cal_32', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys CEA CalSet', code: 'CEA Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11731645322', boxSize: null, unit: 'علبة', notes: 'CEA' },
+            { id: 'cal_33', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys CA 125 II CalSet', code: 'CA125 Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '07030207190', boxSize: null, unit: 'علبة', notes: 'CA 125' },
+            { id: 'cal_34', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys CA 15-3 II CalSet', code: 'CA15-3 Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03045846122', boxSize: null, unit: 'علبة', notes: 'CA 15-3' },
+            { id: 'cal_35', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys CA 19-9 CalSet', code: 'CA19-9 Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11776215122', boxSize: null, unit: 'علبة', notes: 'CA 19-9' },
+            { id: 'cal_36', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys CA 72-4 CalSet', code: 'CA72-4 Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11776274122', boxSize: null, unit: 'علبة', notes: 'CA 72-4' },
+            { id: 'cal_37', category: 'اختبارات بيور', subCategory: 'معايرات', name: 'Elecsys Troponin I CalSet', code: 'TnI Cal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05094828190', boxSize: null, unit: 'علبة', notes: 'Troponin I' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 6️⃣ اختبارات بيور - محاليل التشغيل (Running Solutions)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'sol_1', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'NaOH-D (cobas c pack green)', code: 'NAOHD', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08063451190', boxSize: null, unit: 'عبوة', unitDevice: 'c303' },
+            { id: 'sol_2', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'SMS (cobas c pack green)', code: 'SMS', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08063478190', boxSize: null, unit: 'عبوة', unitDevice: 'c303' },
+            { id: 'sol_3', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'ECO-D (cobas c pack green)', code: 'ECO-D', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08063354190', boxSize: null, unit: 'عبوة', unitDevice: 'c303' },
+            { id: 'sol_4', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'Basic Wash 2×2 L', code: 'Basic Wash', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08302545190', boxSize: null, unit: 'عبوة', unitDevice: 'c303' },
+            { id: 'sol_5', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'Acid Wash 2×2 L', code: 'Acid Wash', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08302723190', boxSize: null, unit: 'عبوة', unitDevice: 'c303' },
+            { id: 'sol_6', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'NaCl 9% Diluent (cobas c pack green)', code: 'NaCl 9%', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08063494190', boxSize: null, unit: 'عبوة', unitDevice: 'c303' },
+            { id: 'sol_7', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'SCCS – Special Cell Cleaning Solution', code: 'SCCS', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08463093190', boxSize: null, unit: 'عبوة', unitDevice: 'c303' },
+            { id: 'sol_8', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'A1CD – HbA1c Hemolyzing Reagent', code: 'A1CD', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '08463107190', boxSize: null, unit: 'عبوة', unitDevice: 'c303' },
+            { id: 'sol_9', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'ISE Internal Standard Gen.2, 2×2 L', code: 'ISE Inter Standard', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04880455190', boxSize: null, unit: 'عبوة', unitDevice: 'ISE' },
+            { id: 'sol_10', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'ISE Diluent Gen.2, 2×2 L', code: 'ISE Diluent', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04880480190', boxSize: null, unit: 'عبوة', unitDevice: 'ISE' },
+            { id: 'sol_11', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'ISE Reference Electrolyte, 500 mL', code: 'ISE REF Electrolyte', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '10820652216', boxSize: null, unit: 'عبوة', unitDevice: 'ISE' },
+            { id: 'sol_12', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'ISE Deproteinizer', code: 'ISE Deproteinizer', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '20763071122', boxSize: null, unit: 'عبوة', unitDevice: 'ISE' },
+            { id: 'sol_13', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'ISE Cleaning Solution / Elecsys SysClean', code: 'SysClean', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11298500316', boxSize: null, unit: 'عبوة', unitDevice: 'ISE + e402' },
+            { id: 'sol_14', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'ProCell II M, 2×2 L', code: 'ProCell 2M', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '06908799190', boxSize: null, unit: 'عبوة', unitDevice: 'e402' },
+            { id: 'sol_15', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'PreClean II M, 2×2 L', code: 'PreClean 2M', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '06908853190', boxSize: null, unit: 'عبوة', unitDevice: 'e402' },
+            { id: 'sol_16', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'CleanCell M, 2×2 L', code: 'CleanCell M', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04880293190', boxSize: null, unit: 'عبوة', unitDevice: 'e402' },
+            { id: 'sol_17', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'Diluent Universal (E2G)', code: 'Diluent Universal', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '07299001190', boxSize: null, unit: 'عبوة', unitDevice: 'e402' },
+            { id: 'sol_18', category: 'اختبارات بيور', subCategory: 'محاليل تشغيل', name: 'Diluent MultiAssay (E2G)', code: 'Diluent MultiAssay', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '07299010190', boxSize: null, unit: 'عبوة', unitDevice: 'e402' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 7️⃣ اختبارات بيور - القطع والمستهلكات (Roche Spare Parts)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'part_1', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Na Electrode (Cartridge NA)', code: 'Na Electrode', govCode: '787803143', nupco: '4111600418900', nupcoTrade: '4111600418902', rocheCatalog: '10825468001', boxSize: null, unit: 'قطعة', unitDevice: 'ISE', notes: 'نفس القطعة لجميع أجهزة روش' },
+            { id: 'part_2', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'K Electrode (Cartridge K)', code: 'K Electrode', govCode: '787803129', nupco: '4111600413500', nupcoTrade: '4111600413502', rocheCatalog: '10825441001', boxSize: null, unit: 'قطعة', unitDevice: 'ISE', notes: 'نفس القطعة لجميع أجهزة روش' },
+            { id: 'part_3', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Cl Electrode (Cartridge CL)', code: 'Cl Electrode', govCode: '787803113', nupco: '4111600401900', nupcoTrade: '4111600401902', rocheCatalog: '03246353001', boxSize: null, unit: 'قطعة', unitDevice: 'ISE', notes: 'نفس القطعة لجميع أجهزة روش' },
+            { id: 'part_4', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Reference Electrode', code: 'Ref Electrode', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03149501001', boxSize: null, unit: 'قطعة', unitDevice: 'ISE' },
+            { id: 'part_5', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'AssayTip/AssayCup Tray (E2G)', code: 'Tips + Cups', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05694302001', boxSize: null, unit: 'علبة', unitDevice: 'e402', notes: '3780 تيب + 3780 كب' },
+            { id: 'part_6', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Sample Cup (Standard) 5000 pcs', code: 'Cups', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '10394246001', boxSize: null, unit: 'علبة', unitDevice: 'عام', notes: 'كاسات العينات' },
+            { id: 'part_7', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Reaction Cell for cobas c 303', code: 'Reaction Cell C303', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '09033408001', boxSize: null, unit: 'قطعة', unitDevice: 'c303' },
+            { id: 'part_8', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Halogen Lamp Assy 12V/50W', code: 'Lamp', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04813707001', boxSize: null, unit: 'قطعة', unitDevice: 'c303' },
+            { id: 'part_9', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Reservoir Cup (ProCell/CleanCell)', code: 'Reservoir Cup', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '07485409001', boxSize: null, unit: 'علبة', unitDevice: 'e402', notes: '8 كاسات' },
+            { id: 'part_10', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Liquid Flow Cleaning Cup', code: 'Flow Cleaning Cup', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '07485425001', boxSize: null, unit: 'قطعة', unitDevice: 'e402' },
+            { id: 'part_11', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'PreWash Liquid Flow Cleaning Cup', code: 'PreWash Cup', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '07485433001', boxSize: null, unit: 'قطعة', unitDevice: 'e402' },
+            { id: 'part_12', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Measuring Cell with Reference Electrode', code: 'Measuring Cell', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05151643001', boxSize: null, unit: 'قطعة', unitDevice: 'e402', notes: 'قطعة صيانة / تبديل' },
+            { id: 'part_13', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Maintenance Kit 1 year – c303', code: 'Maint Kit c303', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '09803025001', boxSize: null, unit: 'علبة', unitDevice: 'c303', notes: 'تأتي غالباً مع عقد الصيانة' },
+            { id: 'part_14', category: 'اختبارات بيور', subCategory: 'قطع ومستهلكات روش', name: 'Maintenance Kit 1 year – e402', code: 'Maint Kit e402', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '09490990001', boxSize: null, unit: 'علبة', unitDevice: 'e402', notes: 'تأتي غالباً مع عقد الصيانة' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 8️⃣ اختبارات بيور - QC (ضوابط الجودة)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'qc_1', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl ClinChem Multi 1 (PCC1)', code: 'PCC1', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05117003190', boxSize: null, unit: 'علبة', notes: 'العبوة 20×5 مل؛ 4×5 مل: 05947626190' },
+            { id: 'qc_2', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl ClinChem Multi 2 (PCC2)', code: 'PCC2', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05117216190', boxSize: null, unit: 'علبة', notes: 'العبوة 20×5 مل؛ 4×5 مل: 05947774190' },
+            { id: 'qc_3', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl HbA1c norm', code: 'HbA1c norm', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05479207190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_4', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl HbA1c path', code: 'HbA1c path', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05912504190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_5', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'Precinorm CK-MB', code: 'CK-MB QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11447378122', boxSize: null, unit: 'علبة' },
+            { id: 'qc_6', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'Ammonia/Ethanol/CO2 Control N', code: 'AMM QC N', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '20752401190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_7', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'Ammonia/Ethanol/CO2 Control A', code: 'AMM QC A', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '20753009190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_8', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'Precinorm PUC', code: 'PUC QC N', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03121291122', boxSize: null, unit: 'علبة', notes: 'QC بول للـ Microalbumin و TPU' },
+            { id: 'qc_9', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'Precipath PUC', code: 'PUC QC P', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03121313122', boxSize: null, unit: 'علبة', notes: 'QC بول للـ Microalbumin و TPU' },
+            { id: 'qc_10', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Universal', code: 'Control U', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11731416190', boxSize: null, unit: 'علبة', notes: 'TSH، FT4، FT3، HCG، Prolactin، LH، FSH، Testosterone، Estradiol، Progesterone، Cortisol، DHEA-S' },
+            { id: 'qc_11', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Varia', code: 'Control V', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05618860190', boxSize: null, unit: 'علبة', notes: 'PTH' },
+            { id: 'qc_12', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Multimarker', code: 'PreciControl MM', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05341787190', boxSize: null, unit: 'علبة', notes: 'Insulin، C-Peptide' },
+            { id: 'qc_13', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Tumor Marker', code: 'Control TM', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11776452122', boxSize: null, unit: 'علبة', notes: 'PSA، AFP، CA 125، CA 15-3، CA 19-9، CA 72-4، CEA — عبوة L1+L2' },
+            { id: 'qc_14', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Vitamin D total III', code: 'VitD QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '09038124190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_15', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Anemia', code: 'Anemia QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04415299190', boxSize: null, unit: 'علبة', notes: 'Vitamin B12، Folate، Ferritin' },
+            { id: 'qc_16', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Troponin', code: 'TnI QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '05095107190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_17', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl HBsAg II', code: 'HBsAg QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04687876190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_18', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Anti-HBs', code: 'Anti-HBs QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '11876317122', boxSize: null, unit: 'علبة' },
+            { id: 'qc_19', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Anti-HCV', code: 'Anti-HCV QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '03290379190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_20', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Anti-HBc', code: 'Anti-HBc QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04927931190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_21', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl HIV Gen II', code: 'HIV QC Gen II', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '06924107190', boxSize: null, unit: 'علبة', notes: 'النشرة الأمريكية 06924107162' },
+            { id: 'qc_22', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl HIV; HIV-2+GrpO', code: 'HIV QC 2', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '06924115190', boxSize: null, unit: 'علبة', notes: 'النشرة الأمريكية 06924115162' },
+            { id: 'qc_23', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Syphilis', code: 'Syphilis QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '06923364190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_24', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Toxo IgG', code: 'Toxo IgG QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04618823190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_25', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Toxo IgM', code: 'Toxo IgM QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04618866190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_26', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Rubella IgG', code: 'Rubella IgG QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04618807190', boxSize: null, unit: 'علبة' },
+            { id: 'qc_27', category: 'اختبارات بيور', subCategory: 'QC ضوابط الجودة', name: 'PreciControl Rubella IgM', code: 'Rubella IgM QC', govCode: '—', nupco: '—', nupcoTrade: '—', rocheCatalog: '04618840190', boxSize: null, unit: 'علبة' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 9️⃣ كيمياء - بنود أخرى (من الملفات السابقة)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'chm_1', category: 'كيمياء', name: 'TROPONIN MINI VIDAS', code: 'VAVA.2343', govCode: '787803343', nupco: '4111600421100', boxSize: 60, unit: 'اختبار' },
+            { id: 'chm_2', category: 'كيمياء', name: 'BETA HCG MINI VIDAS', code: 'VAVA.2345', govCode: '787803345', nupco: '4111600428700', boxSize: 60, unit: 'اختبار' },
+            { id: 'chm_3', category: 'كيمياء', name: 'CG +6 ISTAT', code: 'VAVA.3148', govCode: '787803648', nupco: '4111580802600', boxSize: 25, unit: 'اختبار' },
+            { id: 'chm_4', category: 'كيمياء', name: 'BNP ISTAT', code: 'VAVA.3149', govCode: '787803649', nupco: '4111580802700', boxSize: 25, unit: 'اختبار' },
+            { id: 'chm_5', category: 'كيمياء', name: 'CG+4', code: 'VAVA.3150', govCode: '787803650', nupco: '4111580802800', boxSize: 25, unit: 'اختبار' },
+            { id: 'chm_6', category: 'كيمياء', name: 'TROPONINI ISTAT', code: 'VAVA.3161', govCode: '787803652', nupco: '4111580803000', boxSize: 25, unit: 'اختبار' },
+            { id: 'chm_7', category: 'كيمياء', name: 'PT/INR ISTAT', code: 'VAVA.3162', govCode: '787803691', nupco: '411160051100', boxSize: 24, unit: 'اختبار' },
+            { id: 'chm_8', category: 'كيمياء', name: 'KIT URINALYSIS', code: 'VAVA.3718', govCode: '787803718', nupco: '4111613600000', boxSize: 100, unit: 'شريط' },
+            { id: 'chm_9', category: 'كيمياء', name: 'شرائط تحليل البول', code: 'VAVA.3719', govCode: '787803719', nupco: '4111613800000', boxSize: 100, unit: 'شريط' },
+            { id: 'chm_10', category: 'كيمياء', name: 'شرائط تحليل الحمل', code: 'VAVA.3751', govCode: '787803751', nupco: '4111620500100', boxSize: 40, unit: 'شريط' },
+            { id: 'chm_11', category: 'كيمياء', name: 'شراب قياس منحنى السكر', code: 'VAVA.3752', govCode: '787803752', nupco: '4111620600000', boxSize: 20, unit: 'زجاجة' },
+            { id: 'chm_12', category: 'كيمياء', name: 'شرائط تحليل السكر', code: 'VAVA.3753', govCode: '787803753', nupco: '4111621500000', boxSize: 100, unit: 'شريط' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 🔟 مستهلكات (من الملفات السابقة)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'cons_1', category: 'مستهلكات', name: 'BAG 15*25', code: 'VAVA.1199', govCode: '787801199', nupco: '411041051800', boxSize: 1000, unit: 'كيس' },
+            { id: 'cons_2', category: 'مستهلكات', name: 'BAG 14*16', code: 'VAVA.1201', govCode: '787801201', nupco: '411041052000', boxSize: 2000, unit: 'كيس' },
+            { id: 'cons_3', category: 'مستهلكات', name: 'WOODEN STICKS', code: 'VAVA.1212', govCode: '787801212', nupco: '421415020000', boxSize: 5000, unit: 'عود' },
+            { id: 'cons_4', category: 'مستهلكات', name: '24 HOURS URINE', code: 'VAVA.1222', govCode: '787801222', nupco: '411041120110', boxSize: 30, unit: 'عبوة' },
+            { id: 'cons_5', category: 'مستهلكات', name: 'TUBE CENTRIFUGE', code: 'VAVA.1223', govCode: '787801223', nupco: '411217030600', boxSize: 50, unit: 'أنبوب' },
+            { id: 'cons_6', category: 'مستهلكات', name: 'POLYSTYRENE WITHOUT CAP', code: 'VAVA.1228', govCode: '787801228', nupco: '411218160100', boxSize: 10000, unit: 'أنبوب' },
+            { id: 'cons_7', category: 'مستهلكات', name: 'POLYSTYRENE WITH CAP', code: 'VAVA.1229', govCode: '787801229', nupco: '411217010130', boxSize: 500, unit: 'أنبوب' },
+            { id: 'cons_8', category: 'مستهلكات', name: 'STOOL CONTAINER', code: 'VAVA.1245', govCode: '787801245', nupco: '411041220000', boxSize: 400, unit: 'علبة' },
+            { id: 'cons_9', category: 'مستهلكات', name: 'URINE CONTAINER', code: 'VAVA.1248', govCode: '787801248', nupco: '411041120150', boxSize: 400, unit: 'علبة' },
+            { id: 'cons_10', category: 'مستهلكات', name: 'URINE CONTAINER 60 ML', code: 'VAVA.1251', govCode: '787801251', nupco: '411041120050', boxSize: 800, unit: 'علبة' },
+            { id: 'cons_11', category: 'مستهلكات', name: 'COVER SLIP', code: 'VAVA.1296', govCode: '787801296', nupco: '411226200400', boxSize: 100, unit: 'غطاء' },
+            { id: 'cons_12', category: 'مستهلكات', name: 'LANCET ADULT', code: 'VAVA.1517', govCode: '787801517', nupco: '411041020020', boxSize: 5000, unit: 'إبرة' },
+            { id: 'cons_13', category: 'مستهلكات', name: 'LANCET PEDIATRIC', code: 'VAVA.1520', govCode: '787801520', nupco: '411041020030', boxSize: 5000, unit: 'إبرة' },
+            { id: 'cons_14', category: 'مستهلكات', name: 'LENS PAPER', code: 'VAVA.1521', govCode: '787801521', nupco: '422950420160', boxSize: 1250, unit: 'ورقة' },
+            { id: 'cons_15', category: 'مستهلكات', name: 'OIL WOOD', code: 'VAVA.1528', govCode: '787801528', nupco: '411226050010', boxSize: 'BOTTLE', unit: 'زجاجة' },
+            { id: 'cons_16', category: 'مستهلكات', name: 'SLIDE', code: 'VAVA.1712', govCode: '787801712', nupco: '411226010030', boxSize: 2500, unit: 'شريحة' },
+            { id: 'cons_17', category: 'مستهلكات', name: 'GLASS SLIDE', code: 'VAVA.1713', govCode: '787801713', nupco: '411226010020', boxSize: 2500, unit: 'شريحة' },
+            { id: 'cons_18', category: 'مستهلكات', name: 'SQUEEZING BALL', code: 'VAVA.1727', govCode: '787801727', nupco: '411041060000', boxSize: 500, unit: 'قطعة' },
+            { id: 'cons_19', category: 'مستهلكات', name: 'SYRINGE ARTERIAL BLOOD', code: 'VAVA.1734', govCode: '787801734', nupco: '422151501138', boxSize: 100, unit: 'حقنة' },
+            { id: 'cons_20', category: 'مستهلكات', name: 'TIPS 100 UL', code: 'VAVA.1788', govCode: '787801788', nupco: '411215090170', boxSize: 1000, unit: 'رأس' },
+            { id: 'cons_21', category: 'مستهلكات', name: 'TIPS 1000 UL', code: 'VAVA.1789', govCode: '787801789', nupco: '411215090160', boxSize: 1000, unit: 'رأس' },
+            { id: 'cons_22', category: 'مستهلكات', name: 'PASTEUR PIPETTE', code: 'VAVA.1801', govCode: '787801801', nupco: '411215090140', boxSize: 1000, unit: 'ماصة' },
+            { id: 'cons_23', category: 'مستهلكات', name: 'TUBE PT 3.2', code: 'VAVA.1827', govCode: '787801827', nupco: '411400001780', boxSize: 100, unit: 'أنبوب' },
+            { id: 'cons_24', category: 'مستهلكات', name: 'TUBE EDTA', code: 'VAVA.1832', govCode: '787801832', nupco: '411400001770', boxSize: 1200, unit: 'أنبوب' },
+            { id: 'cons_25', category: 'مستهلكات', name: 'TUBE NAT', code: 'VAVA.1833', govCode: '787801833', nupco: '411400001760', boxSize: 100, unit: 'أنبوب' },
+            { id: 'cons_26', category: 'مستهلكات', name: 'GREEN TUBE', code: 'VAVA.1834', govCode: '787801834', nupco: '411400001740', boxSize: 1200, unit: 'أنبوب' },
+            { id: 'cons_27', category: 'مستهلكات', name: 'TUBE PLAIN WITH CLOT ACTIVATOR', code: 'VAVA.1836', govCode: '787801836', nupco: '411217080030', boxSize: 1200, unit: 'أنبوب' },
+            { id: 'cons_28', category: 'مستهلكات', name: 'TUBE PLAIN WITHOUT CLOT ACTIVATOR', code: 'VAVA.1837', govCode: '787801837', nupco: '411041070220', boxSize: 1200, unit: 'أنبوب' },
+            { id: 'cons_29', category: 'مستهلكات', name: 'YELLOW TUBE', code: 'VAVA.1841', govCode: '787801841', nupco: '411041070250', boxSize: 100, unit: 'أنبوب' },
+            { id: 'cons_30', category: 'مستهلكات', name: 'GLASS TUBE', code: 'VAVA.1848', govCode: '787801848', nupco: '411218160040', boxSize: 2000, unit: 'أنبوب' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 1️⃣1️⃣ أمراض الدم (Hematology)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'blood_1', category: 'أمراض الدم', name: 'CBC XN1000 (Sysmex)', code: 'VAVA.2453', govCode: '787802453', nupco: '41116080190', boxSize: 450, unit: 'اختبار' },
+            { id: 'blood_2', category: 'أمراض الدم', name: 'CBC XP300 (Sysmex)', code: 'VAVA.2457', govCode: '787802457', nupco: '41116120080', boxSize: 1200, unit: 'اختبار' },
+            { id: 'blood_3', category: 'أمراض الدم', name: 'CARD ABO REVERSE GROUP', code: 'VAVA.2523', govCode: '787802523', nupco: '41116101080', boxSize: 336, unit: 'بطاقة' },
+            { id: 'blood_4', category: 'أمراض الدم', name: 'CARD LISS COOMBS', code: 'VAVA.2524', govCode: '787802524', nupco: '41116101090', boxSize: 504, unit: 'بطاقة' },
+            { id: 'blood_5', category: 'أمراض الدم', name: 'CARD COMPLETE CROSSMATCH', code: 'VAVA.2528', govCode: '787802528', nupco: '41116101300', boxSize: 48, unit: 'بطاقة' },
+            { id: 'blood_6', category: 'أمراض الدم', name: 'CARD A/B/DVI+A/B/DVI', code: 'VAVA.2529', govCode: '787802529', nupco: '41116101500', boxSize: 1, unit: 'بطاقة' },
+            { id: 'blood_7', category: 'أمراض الدم', name: 'CARD +CW+K', code: 'VAVA.2530', govCode: '787802530', nupco: '41116101420', boxSize: 288, unit: 'بطاقة' },
+            { id: 'blood_8', category: 'أمراض الدم', name: 'ANTIBODY SCREENING 3 CELLS', code: 'VAVA.2538', govCode: '787802538', nupco: '41116102400', boxSize: 200, unit: 'اختبار' },
+            { id: 'blood_9', category: 'أمراض الدم', name: 'ANTIBODY 11 CELLS', code: 'VAVA.2539', govCode: '787802539', nupco: '41116102420', boxSize: 1, unit: 'اختبار' },
+            { id: 'blood_10', category: 'أمراض الدم', name: 'DILUENT 1', code: 'VAVA.2543', govCode: '787802543', nupco: '41140003360', boxSize: null, unit: 'عبوة' },
+            { id: 'blood_11', category: 'أمراض الدم', name: 'DILUENT 2', code: 'VAVA.2544', govCode: '787802544', nupco: '41140003370', boxSize: null, unit: 'عبوة' },
+            { id: 'blood_12', category: 'أمراض الدم', name: 'HB ELECTROPHORESIS VARIANT II', code: 'VAVA.2553', govCode: '787802553', nupco: '41140007700', boxSize: 500, unit: 'اختبار' },
+            { id: 'blood_13', category: 'أمراض الدم', name: 'TIPS BLOOD BANK', code: 'VAVA.2580', govCode: '787802580', nupco: '411158160830', boxSize: 1000, unit: 'رأس' },
+            { id: 'blood_14', category: 'أمراض الدم', name: 'ANTI A', code: 'VAVA.2581', govCode: '787802581', nupco: '41116020000', boxSize: 'VIAL', unit: 'قارورة' },
+            { id: 'blood_15', category: 'أمراض الدم', name: 'ANTI B', code: 'VAVA.2583', govCode: '787802583', nupco: '41116020200', boxSize: 'VIAL', unit: 'قارورة' },
+            { id: 'blood_16', category: 'أمراض الدم', name: 'D DIMER LATEX', code: 'VAVA.2585', govCode: '787802585', nupco: '41116005070', boxSize: 60, unit: 'اختبار' },
+            { id: 'blood_17', category: 'أمراض الدم', name: 'PT STAGO', code: 'VAVA.2586', govCode: '787802586', nupco: '41116005090', boxSize: 300, unit: 'اختبار' },
+            { id: 'blood_18', category: 'أمراض الدم', name: 'CBC DXH', code: 'VAVA.2588', govCode: '787802588', nupco: '4116008090', boxSize: 160, unit: 'اختبار' },
+            { id: 'blood_19', category: 'أمراض الدم', name: 'RETIC DXH', code: 'VAVA.2590', govCode: '787802590', nupco: '4116008140', boxSize: 800, unit: 'اختبار' },
+            { id: 'blood_20', category: 'أمراض الدم', name: 'CARD ESR', code: 'VAVA.2591', govCode: '787802591', nupco: '41116008050', boxSize: 250, unit: 'بطاقة' },
+            { id: 'blood_21', category: 'أمراض الدم', name: 'ANTI D', code: 'VAVA.2596', govCode: '787802596', nupco: '41116101501', boxSize: 'VIAL', unit: 'قارورة' },
+            { id: 'blood_22', category: 'أمراض الدم', name: 'RAPID MALARIA', code: 'VAVA.2631', govCode: '787802631', nupco: '41116126423', boxSize: 40, unit: 'اختبار' },
+            { id: 'blood_23', category: 'أمراض الدم', name: 'FIBRINOGEN STAGO', code: 'VAVA.2645', govCode: '787802645', nupco: '41140001540', boxSize: 960, unit: 'اختبار' },
+            { id: 'blood_24', category: 'أمراض الدم', name: 'PTT STAGO', code: 'VAVA.2652', govCode: '787802652', nupco: '41140001570', boxSize: 1200, unit: 'اختبار' },
+            { id: 'blood_25', category: 'أمراض الدم', name: 'D DIMER STAGO', code: 'VAVA.2740', govCode: '787802740', nupco: '41140007910', boxSize: 240, unit: 'اختبار' },
+            { id: 'blood_26', category: 'أمراض الدم', name: 'HBA1C VARIANT II', code: 'VAVA.2884', govCode: '787802884', nupco: 'لا يوجد رقم', boxSize: null, unit: 'اختبار' },
+            { id: 'blood_27', category: 'أمراض الدم', name: 'CARD NEWBORN', code: 'VAVA.2932', govCode: '787802932', nupco: '41116102041', boxSize: 48, unit: 'بطاقة' },
+            { id: 'blood_28', category: 'أمراض الدم', name: 'أكياس التبرع بالدم رباعية', code: '—', govCode: '787802793', nupco: '4222301020', boxSize: 20, unit: 'كيس' },
+            { id: 'blood_29', category: 'أمراض الدم', name: 'أكياس التبرع بالدم ثلاثية', code: '—', govCode: '787802796', nupco: '—', boxSize: null, unit: 'كيس' },
+
+            // ═══════════════════════════════════════════════════════════
+            // 1️⃣2️⃣ ميكروبيولوجيا (Microbiology)
+            // ═══════════════════════════════════════════════════════════
+            { id: 'micro_1', category: 'ميكروبيولوجيا', name: 'CRP (Latex)', code: 'VAVA.2394', govCode: '787802394', nupco: '4111601026500', boxSize: 2000, unit: 'اختبار' },
+            { id: 'micro_2', category: 'ميكروبيولوجيا', name: 'HAV ANTIBODY', code: 'VAVA.2401', govCode: '787804877', nupco: '4114000026400', boxSize: 100, unit: 'اختبار' },
+            { id: 'micro_3', category: 'ميكروبيولوجيا', name: 'HCV ANTIBODY', code: 'VAVA.2417', govCode: '787804881', nupco: '4114000026900', boxSize: 200, unit: 'اختبار' },
+            { id: 'micro_4', category: 'ميكروبيولوجيا', name: 'HEPATITIS B CORE', code: 'VAVA.2427', govCode: '787804873', nupco: '4114000026000', boxSize: 100, unit: 'اختبار' },
+            { id: 'micro_5', category: 'ميكروبيولوجيا', name: 'HBSAG', code: 'VAVA.2456', govCode: '787804875', nupco: '4114000026200', boxSize: 2000, unit: 'اختبار' },
+            { id: 'micro_6', category: 'ميكروبيولوجيا', name: 'HBS', code: 'VAVA.2461', govCode: '787804880', nupco: '4114000026700', boxSize: 200, unit: 'اختبار' },
+            { id: 'micro_7', category: 'ميكروبيولوجيا', name: 'HIV AG/AB', code: 'VAVA.2468', govCode: '787804883', nupco: '4114000027100', boxSize: 100, unit: 'اختبار' },
+            { id: 'micro_8', category: 'ميكروبيولوجيا', name: 'RUBELLA IGG', code: 'VAVA.2470', govCode: '787804885', nupco: '4114000027300', boxSize: 100, unit: 'اختبار' },
+            { id: 'micro_9', category: 'ميكروبيولوجيا', name: 'RUBELLA IGM', code: 'VAVA.2471', govCode: '787804886', nupco: '4114000027400', boxSize: 50, unit: 'اختبار' },
+            { id: 'micro_10', category: 'ميكروبيولوجيا', name: 'SYPHILIS', code: 'VAVA.2472', govCode: '787804887', nupco: '4114000027500', boxSize: 200, unit: 'اختبار' },
+            { id: 'micro_11', category: 'ميكروبيولوجيا', name: 'TOXOPLASMA IGG', code: 'VAVA.2473', govCode: '787804888', nupco: '4114000027600', boxSize: 100, unit: 'اختبار' },
+            { id: 'micro_12', category: 'ميكروبيولوجيا', name: 'TOXOPLASMA ANTIBODY', code: 'VAVA.2474', govCode: '787804889', nupco: '4114000027700', boxSize: 50, unit: 'اختبار' },
+            { id: 'micro_13', category: 'ميكروبيولوجيا', name: 'CMV IGG', code: 'VAVA.2461', govCode: '787805560', nupco: '4118160102000', boxSize: 300, unit: 'اختبار' },
+            { id: 'micro_14', category: 'ميكروبيولوجيا', name: 'CMV IGM', code: 'VAVA.2462', govCode: '787805561', nupco: '4118160102100', boxSize: 300, unit: 'اختبار' },
+            { id: 'micro_15', category: 'ميكروبيولوجيا', name: 'HERPES', code: 'VAVA.2465', govCode: '787805564', nupco: '4118160102500', boxSize: 100, unit: 'اختبار' },
+            { id: 'micro_16', category: 'ميكروبيولوجيا', name: 'ASO', code: 'VAVA.2401', govCode: '787805566', nupco: '4118160102700', boxSize: 200, unit: 'اختبار' },
+            { id: 'micro_17', category: 'ميكروبيولوجيا', name: 'HIV AG/AB (300)', code: 'VAVA.2401', govCode: '787805549', nupco: '4118160100800', boxSize: 300, unit: 'اختبار' },
+            { id: 'micro_18', category: 'ميكروبيولوجيا', name: 'HBS (300)', code: 'VAVA.2401', govCode: '787805553', nupco: '4118160101200', boxSize: 300, unit: 'اختبار' },
+            { id: 'micro_19', category: 'ميكروبيولوجيا', name: 'HCV (300)', code: 'VAVA.2401', govCode: '787805554', nupco: '4118160101400', boxSize: 300, unit: 'اختبار' },
+            { id: 'micro_20', category: 'ميكروبيولوجيا', name: 'HBSAG (300)', code: 'VAVA.2401', govCode: '787805555', nupco: '4118160101500', boxSize: 300, unit: 'اختبار' },
+            { id: 'micro_21', category: 'ميكروبيولوجيا', name: 'SYPHILIS (200)', code: 'VAVA.2401', govCode: '787805556', nupco: '4118160101600', boxSize: 200, unit: 'اختبار' },
+            { id: 'micro_22', category: 'ميكروبيولوجيا', name: 'RUBELLA IGM (100)', code: 'VAVA.2401', govCode: '787805569', nupco: '4118160103000', boxSize: 100, unit: 'اختبار' },
+            { id: 'micro_23', category: 'ميكروبيولوجيا', name: 'RUBELLA IGG (300)', code: 'VAVA.2401', govCode: '787805570', nupco: '4118160103100', boxSize: 300, unit: 'اختبار' },
+        ];
+
+        // ═══════════════════════════════════════════════════════════════
+        // التطبيق
+        // ═══════════════════════════════════════════════════════════════
+        const app = {
+            cart: [],
+            currentView: 'browse',
+            searchQuery: '',
+            selectedCategory: 'الكل',
+            selectedSubCategory: 'الكل',
+            requesterName: 'سعد علي سعد القرني',
+            requesterTitle: 'رئيس قسم المختبرات',
+            department: 'مختبر مستشفى سبت العلاية العام',
+            notes: '',
+            newItemName: '', newItemCode: '', newItemGovCode: '',
+            newItemNupco: '', newItemCategory: 'اختبارات بيور',
+            newItemSubCategory: 'كيمياء عامة c303',
+            newItemBoxSize: '', newItemUnit: 'اختبار',
+            newItemRocheCatalog: '',
+
+            init() { this.loadCart(); this.loadSettings(); this.render(); },
+
+            loadCart() {
+                const saved = localStorage.getItem('lab_cart_v3');
+                if (saved) this.cart = JSON.parse(saved);
+            },
+
+            loadSettings() {
+                const saved = localStorage.getItem('lab_settings_v3');
+                if (saved) {
+                    const s = JSON.parse(saved);
+                    this.requesterName = s.requesterName || this.requesterName;
+                    this.requesterTitle = s.requesterTitle || this.requesterTitle;
+                    this.department = s.department || this.department;
+                }
+            },
+
+            saveCart() { localStorage.setItem('lab_cart_v3', JSON.stringify(this.cart)); },
+            saveSettings() {
+                localStorage.setItem('lab_settings_v3', JSON.stringify({
+                    requesterName: this.requesterName,
+                    requesterTitle: this.requesterTitle,
+                    department: this.department
+                }));
+            },
+
+            showToast(msg) {
+                const t = document.getElementById('toast');
+                t.textContent = msg; t.classList.add('show');
+                setTimeout(() => t.classList.remove('show'), 2200);
+            },
+
+            calculateTotal(item) {
+                const kits = parseInt(item.quantity) || 1;
+                if (item.boxSize && !isNaN(parseFloat(item.boxSize))) {
+                    return kits * parseFloat(item.boxSize);
+                }
+                return kits;
+            },
+
+            addItemToCart(itemId) {
+                const item = allItems.find(i => i.id === itemId);
+                if (!item) return;
+                const existing = this.cart.find(c => c.id === item.id);
+                if (existing) existing.quantity = (parseInt(existing.quantity) || 1) + 1;
+                else this.cart.push({ ...item, quantity: 1 });
+                this.saveCart();
+                this.showToast(`✅ "${item.name}"`);
+                this.render();
+            },
+
+            removeFromCart(itemId) {
+                this.cart = this.cart.filter(item => item.id !== itemId);
+                this.saveCart(); this.render();
+            },
+
+            updateQuantity(itemId, newQty) {
+                const item = this.cart.find(c => c.id === itemId);
+                if (item) {
+                    const q = parseInt(newQty);
+                    item.quantity = (q && q > 0) ? q : 1;
+                    this.saveCart();
+                }
+            },
+
+            clearCart() {
+                if (this.cart.length === 0) return;
+                if (confirm('هل أنت متأكد من حذف جميع البنود؟')) {
+                    this.cart = []; this.saveCart(); this.render();
+                }
+            },
+
+            deleteItem(itemId) {
+                if (!confirm('حذف هذا البند من قاعدة البيانات؟')) return;
+                const index = allItems.findIndex(i => i.id === itemId);
+                if (index > -1) { allItems.splice(index, 1); this.render(); }
+            },
+
+            addNewItem() {
+                if (!this.newItemName || !this.newItemCode) {
+                    alert('الرجاء إدخال الاسم والكود'); return;
+                }
+                const newItem = {
+                    id: 'custom_' + Date.now(),
+                    category: this.newItemCategory,
+                    subCategory: this.newItemSubCategory,
+                    name: this.newItemName,
+                    code: this.newItemCode,
+                    govCode: this.newItemGovCode || '',
+                    nupco: this.newItemNupco || '',
+                    rocheCatalog: this.newItemRocheCatalog || '',
+                    boxSize: this.newItemBoxSize ? (isNaN(parseFloat(this.newItemBoxSize)) ? this.newItemBoxSize : parseFloat(this.newItemBoxSize)) : null,
+                    unit: this.newItemUnit || 'اختبار'
+                };
+                allItems.unshift(newItem);
+                this.newItemName = ''; this.newItemCode = ''; this.newItemGovCode = '';
+                this.newItemNupco = ''; this.newItemBoxSize = ''; this.newItemRocheCatalog = '';
+                this.showToast('✅ تمت الإضافة');
+                this.currentView = 'browse';
+                this.render();
+            },
+
+            getStats() {
+                const c = {};
+                allItems.forEach(i => { c[i.category] = (c[i.category] || 0) + 1; });
+                return c;
+            },
+
+            getSubCategories() {
+                const subs = new Set();
+                allItems.forEach(i => {
+                    if (this.selectedCategory === 'الكل' || i.category === this.selectedCategory) {
+                        if (i.subCategory) subs.add(i.subCategory);
+                    }
+                });
+                return ['الكل', ...Array.from(subs)];
+            },
+
+            getFilteredItems() {
+                return allItems.filter(item => {
+                    const matchCat = this.selectedCategory === 'الكل' || item.category === this.selectedCategory;
+                    const matchSub = this.selectedSubCategory === 'الكل' || item.subCategory === this.selectedSubCategory;
+                    const q = this.searchQuery.trim().toLowerCase();
+                    const matchSearch = !q ||
+                        item.name.toLowerCase().includes(q) ||
+                        (item.code || '').toLowerCase().includes(q) ||
+                        (item.govCode || '').toLowerCase().includes(q) ||
+                        (item.nupco || '').toLowerCase().includes(q) ||
+                        (item.rocheCatalog || '').toLowerCase().includes(q);
+                    return matchCat && matchSub && matchSearch;
+                });
+            },
+
+            buildOrderText() {
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+                const timeStr = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+                let text = `*طلب مستهلكات ومواد مخبرية*\n━━━━━━━━━━━━━━━━━━━━\n`;
+                text += `📍 ${this.department}\n👤 ${this.requesterName}\n📋 ${this.requesterTitle}\n`;
+                text += `📅 ${dateStr} - ⏰ ${timeStr}\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+                let totalKits = 0, grandTotal = 0;
+                this.cart.forEach((item, idx) => {
+                    const kits = parseInt(item.quantity) || 1;
+                    const total = this.calculateTotal(item);
+                    totalKits += kits; grandTotal += total;
+                    text += `*${idx + 1}. ${item.name}*\n`;
+                    if (item.code) text += `   🔖 ${item.code}\n`;
+                    if (item.govCode) text += `   🏛️ وزاري: ${item.govCode}\n`;
+                    if (item.nupco) text += `   📦 نبكو: ${item.nupco}\n`;
+                    if (item.rocheCatalog) text += `   🧬 روش: ${item.rocheCatalog}\n`;
+                    text += `   📥 عدد الكت: *${kits}*\n`;
+                    if (item.boxSize && !isNaN(parseFloat(item.boxSize))) {
+                        text += `   📦 العبوة: ${item.boxSize} ${item.unit || ''}\n`;
+                        text += `   ✅ الإجمالي: *${total} ${item.unit || ''}*\n`;
+                    }
+                    text += `\n`;
+                });
+                text += `━━━━━━━━━━━━━━━━━━━━\n📊 *الإجمالي:*\n`;
+                text += `   • البنود: ${this.cart.length}\n   • الكت: ${totalKits}\n   • الوحدات: ${grandTotal}\n`;
+                if (this.notes) text += `\n📝 *ملاحظات:* ${this.notes}\n`;
+                text += `\n✍️ ${this.requesterName}\n© 2026 سعد القرني`;
+                return text;
+            },
+
+            shareWhatsApp() {
+                if (this.cart.length === 0) return alert('الطلبية فارغة');
+                const encoded = encodeURIComponent(this.buildOrderText());
+                window.open(`https://wa.me/?text=${encoded}`, '_blank');
+            },
+
+            shareEmail() {
+                if (this.cart.length === 0) return alert('الطلبية فارغة');
+                const subject = encodeURIComponent(`طلب مخبري - ${new Date().toLocaleDateString('ar-SA')}`);
+                const body = encodeURIComponent(this.buildOrderText());
+                window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            },
+
+            copyOrder() {
+                if (this.cart.length === 0) return alert('الطلبية فارغة');
+                navigator.clipboard.writeText(this.buildOrderText())
+                    .then(() => this.showToast('✅ تم النسخ'))
+                    .catch(() => {
+                        const ta = document.createElement('textarea');
+                        ta.value = this.buildOrderText();
+                        document.body.appendChild(ta); ta.select();
+                        document.execCommand('copy'); document.body.removeChild(ta);
+                        this.showToast('✅ تم النسخ');
+                    });
+            },
+
+            printRequisition() {
+                if (this.cart.length === 0) return alert('الطلبية فارغة');
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('en-GB');
+                const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                let totalKits = 0, grandTotal = 0;
+                this.cart.forEach(item => { totalKits += parseInt(item.quantity) || 1; grandTotal += this.calculateTotal(item); });
+
+                const html = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>طلب مخبري</title>
+<style>
+    @page { size: A4; margin: 1cm; }
+    body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 0; padding: 15px; color: #000; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .header { text-align: center; border-bottom: 3px double #0369a1; padding-bottom: 8px; margin-bottom: 10px; }
+    .header h1 { margin: 3px 0; font-size: 18px; color: #0369a1; }
+    .header p { margin: 2px 0; font-size: 12px; font-weight: 600; }
+    .title { text-align: center; background: #0369a1; color: white; padding: 6px; margin: 10px 0; font-size: 15px; font-weight: 700; border-radius: 4px; }
+    .info { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 10px; }
+    th { background: #0369a1; color: white; padding: 6px 3px; text-align: center; border: 1px solid #0369a1; }
+    td { border: 1px solid #999; padding: 4px 3px; text-align: center; }
+    tr:nth-child(even) td { background: #f0f9ff; }
+    td.name { text-align: right; font-weight: 600; }
+    .total-row td { background: #065f46 !important; color: white !important; font-weight: 700; }
+    .sig { margin-top: 25px; display: flex; justify-content: space-between; }
+    .sig-box { text-align: center; }
+    .sig-line { border-top: 2px solid #000; width: 180px; margin-top: 35px; padding-top: 4px; font-size: 11px; font-weight: 700; }
+    .notes { margin-top: 12px; padding: 8px; border: 1px dashed #666; font-size: 11px; }
+    .footer { text-align: center; margin-top: 15px; font-size: 9px; color: #666; border-top: 1px solid #ccc; padding-top: 5px; }
+    @media print { body { padding: 0; } }
+</style></head><body>
+<div class="container">
+    <div class="header">
+        <p>المملكة العربية السعودية</p>
+        <p>وزارة الصحة - تجمع عسير الصحي</p>
+        <h1>مختبر مستشفى سبت العلاية العام</h1>
+    </div>
+    <div class="title">طلب مستهلكات ومواد مخبرية</div>
+    <div class="info">
+        <div><strong>التاريخ:</strong> ${dateStr}</div>
+        <div><strong>الوقت:</strong> ${timeStr}</div>
+        <div><strong>عدد البنود:</strong> ${this.cart.length}</div>
+    </div>
+    <table>
+        <thead><tr>
+            <th>م</th><th>اسم الصنف</th><th>الرقم الوزاري</th><th>رقم نوبكو</th><th>كتالوج روش</th><th>عدد الكت</th><th>حجم العبوة</th><th>الإجمالي</th>
+        </tr></thead>
+        <tbody>
+        ${this.cart.map((item, idx) => {
+            const kits = parseInt(item.quantity) || 1;
+            const total = this.calculateTotal(item);
+            return `<tr>
+                <td>${idx + 1}</td>
+                <td class="name">${item.name}<br><small style="color:#666;font-weight:400;">${item.code || ''}</small></td>
+                <td>${item.govCode || '-'}</td>
+                <td>${item.nupco || '-'}</td>
+                <td>${item.rocheCatalog || '-'}</td>
+                <td>${kits}</td>
+                <td>${item.boxSize || '-'}</td>
+                <td><strong>${total}</strong> ${item.unit || ''}</td>
+            </tr>`;
+        }).join('')}
+            <tr class="total-row">
+                <td colspan="5">الإجمالي</td>
+                <td>${totalKits} كت</td><td>-</td><td>${grandTotal}</td>
+            </tr>
+        </tbody>
+    </table>
+    ${this.notes ? `<div class="notes"><strong>ملاحظات:</strong> ${this.notes}</div>` : ''}
+    <div class="sig">
+        <div class="sig-box"><div style="font-weight:700;font-size:12px;">مقدم الطلب</div>
+            <div class="sig-line">${this.requesterName}<br><small style="font-weight:400;">${this.requesterTitle}</small></div></div>
+        <div class="sig-box"><div style="font-weight:700;font-size:12px;">مدير المختبر</div><div class="sig-line">........................</div></div>
+        <div class="sig-box"><div style="font-weight:700;font-size:12px;">التموين</div><div class="sig-line">........................</div></div>
+    </div>
+    <div class="footer">© 2026 سعد القرني - جميع الحقوق محفوظة</div>
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script>
+</body></html>`;
+                const w = window.open('', '_blank');
+                w.document.write(html); w.document.close();
+            },
+
+            exportCSV() {
+                if (this.cart.length === 0) return alert('الطلبية فارغة');
+                const now = new Date();
+                let totalKits = 0, grandTotal = 0;
+                const rows = [
+                    ['وزارة الصحة - تجمع عسير الصحي'],
+                    ['مختبر مستشفى سبت العلاية العام'],
+                    ['طلب مستهلكات ومواد مخبرية'],
+                    [],
+                    ['التاريخ:', now.toLocaleDateString('en-GB'), 'الوقت:', now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })],
+                    ['مقدم الطلب:', this.requesterName],
+                    [],
+                    ['م', 'اسم الصنف', 'الفئة', 'الفئة الفرعية', 'الكود', 'الرقم الوزاري', 'رقم نبكو', 'كتالوج روش', 'عدد الكت', 'حجم العبوة', 'الإجمالي', 'الوحدة']
+                ];
+                this.cart.forEach((item, idx) => {
+                    const kits = parseInt(item.quantity) || 1;
+                    const total = this.calculateTotal(item);
+                    totalKits += kits; grandTotal += total;
+                    rows.push([idx + 1, item.name, item.category, item.subCategory || '', item.code || '', item.govCode || '', item.nupco || '', item.rocheCatalog || '', kits, item.boxSize || '-', total, item.unit || '']);
+                });
+                rows.push([]);
+                rows.push(['الإجمالي', '', '', '', '', '', '', '', totalKits, '', grandTotal, '']);
+                const csv = '\uFEFF' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `lab_order_${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}.csv`;
+                link.click();
+                this.showToast('✅ تم التصدير');
+            },
+
+            render() {
+                document.getElementById('app').innerHTML = this.renderHeader() + this.renderContent();
+            },
+
+            renderHeader() {
+                return `<div class="header no-print"><div class="container" style="padding: 0.75rem 0;">
+                <div style="text-align: center; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid #0369a1;">
+                    <p style="margin: 0; font-weight: 700; color: #001f3f; font-size: 0.85rem;">وزارة الصحة - تجمع عسير الصحي</p>
+                    <p style="margin: 3px 0; font-weight: 700; color: #0369a1; font-size: 0.95rem;">مختبر مستشفى سبت العلاية العام</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <h1 style="font-size: 1.15rem; font-weight: 700; color: #001f3f; margin: 0;">📋 إدارة الطلبيات</h1>
+                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                        ${this.currentView === 'browse' ?
+                            `<button class="btn btn-primary" onclick="app.currentView='add';app.render();" style="font-size:0.85rem;">➕ بند جديد</button>
+                             <button class="btn btn-success" onclick="app.currentView='cart';app.render();" style="font-size:0.85rem;">🛒 الطلبية (${this.cart.length})</button>` :
+                            this.currentView === 'cart' ?
+                            `<button class="btn btn-primary" onclick="app.currentView='browse';app.render();" style="font-size:0.85rem;">🔙 المتصفح</button>
+                             <button class="btn btn-primary" onclick="app.currentView='add';app.render();" style="font-size:0.85rem;">➕ بند جديد</button>` :
+                            `<button class="btn btn-primary" onclick="app.currentView='browse';app.render();" style="font-size:0.85rem;">🔙 المتصفح</button>
+                             <button class="btn btn-success" onclick="app.currentView='cart';app.render();" style="font-size:0.85rem;">🛒 الطلبية (${this.cart.length})</button>`
+                        }
+                    </div>
+                </div>
+            </div></div>`;
+            },
+
+            renderContent() {
+                if (this.currentView === 'add') return this.renderAddForm();
+                if (this.currentView === 'cart') return this.renderCart();
+                return this.renderBrowse();
+            },
+
+            renderBrowse() {
+                const filtered = this.getFilteredItems();
+                const stats = this.getStats();
+                const categories = ['الكل', ...Object.keys(stats)];
+                const subCategories = this.getSubCategories();
+
+                return `
+                <div class="container" style="padding: 1rem 0;">
+                    <div class="card">
+                        <div class="summary-box">
+                            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+                                <div>
+                                    <strong style="color:#1e40af;">📊 إحصائيات قاعدة البيانات</strong>
+                                    <div style="margin-top:0.4rem;font-size:0.85rem;color:#374151;">
+                                        إجمالي: <strong>${allItems.length}</strong> بند
+                                        ${Object.entries(stats).map(([k,v]) => ` • ${k}: <strong>${v}</strong>`).join('')}
+                                    </div>
+                                </div>
+                                ${this.cart.length > 0 ? `<div class="total-amount">🛒 ${this.cart.length} بند</div>` : ''}
+                            </div>
+                        </div>
+
+                        <h2 style="margin-bottom: 1rem; color: #1f2937; font-size: 1.1rem;">📚 قائمة البنود</h2>
+
+                        <div style="margin-bottom: 1rem;">
+                            <input type="text" class="input-field" id="searchInput" placeholder="🔍 ابحث بالاسم أو الكود أو الرقم الوزاري أو كتالوج روش..."
+                                value="${this.searchQuery}" oninput="app.searchQuery=this.value;app.render();">
+                        </div>
+
+                        <div class="filter-bar">
+                            ${categories.map(cat => `
+                                <button class="filter-btn ${this.selectedCategory === cat ? 'active' : ''}"
+                                    onclick="app.selectedCategory='${cat}';app.selectedSubCategory='الكل';app.render();">
+                                    ${cat} ${cat !== 'الكل' ? `(${stats[cat] || 0})` : ''}
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        ${subCategories.length > 1 ? `
+                        <div class="filter-bar" style="background:#fef3c7;border-color:#fcd34d;">
+                            <span style="font-size:0.8rem;font-weight:600;color:#92400e;align-self:center;">الفئة الفرعية:</span>
+                            ${subCategories.map(sub => `
+                                <button class="filter-btn ${this.selectedSubCategory === sub ? 'active' : ''}"
+                                    onclick="app.selectedSubCategory='${sub}';app.render();" style="font-size:0.75rem;">
+                                    ${sub}
+                                </button>
+                            `).join('')}
+                        </div>` : ''}
+
+                        <div style="margin-bottom:0.5rem;color:#6b7280;font-size:0.85rem;">النتائج: ${filtered.length} بند</div>
+
+                        ${filtered.length === 0 ?
+                            `<div class="empty-state">🔍 لا توجد نتائج</div>` :
+                            filtered.map(item => `
+                                <div class="item-card">
+                                    <div class="item-info">
+                                        <div class="item-name">${item.name}</div>
+                                        <div class="item-code">
+                                            ${item.code ? `🔖 ${item.code}` : ''}
+                                            ${item.govCode ? ` • 🏛️ ${item.govCode}` : ''}
+                                            ${item.nupco ? ` • 📦 ${item.nupco}` : ''}
+                                            ${item.rocheCatalog ? ` • 🧬 روش: ${item.rocheCatalog}` : ''}
+                                            <br>
+                                            <span class="badge" style="background:#e0e7ff;color:#3730a3;margin-top:4px;">${item.category}</span>
+                                            ${item.subCategory ? `<span class="badge" style="background:#dbeafe;color:#1e40af;margin-top:4px;">${item.subCategory}</span>` : ''}
+                                            ${item.boxSize ? `<span class="badge" style="background:#fef3c7;color:#92400e;margin-top:4px;">📦 ${item.boxSize} ${item.unit || ''}</span>` : ''}
+                                            ${item.unitDevice ? `<span class="badge" style="background:#fce7f3;color:#9d174d;margin-top:4px;">⚙️ ${item.unitDevice}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="item-actions">
+                                        <button class="btn btn-success" onclick="app.addItemToCart('${item.id}');" style="font-size:0.8rem;padding:0.4rem 0.7rem;">➕</button>
+                                        <button class="btn btn-danger" onclick="app.deleteItem('${item.id}');" style="font-size:0.8rem;padding:0.4rem 0.7rem;">🗑️</button>
+                                    </div>
+                                </div>
+                            `).join('')
+                        }
+                    </div>
+                </div>`;
+            },
+
+            renderCart() {
+                let totalKits = 0, grandTotal = 0;
+                this.cart.forEach(item => { totalKits += parseInt(item.quantity) || 1; grandTotal += this.calculateTotal(item); });
+
+                return `
+                <div class="container" style="padding: 1rem 0;">
+                    <div class="card">
+                        <h2 style="margin-bottom: 1rem; color: #1f2937; font-size: 1.1rem;">🛒 الطلبية (${this.cart.length})</h2>
+                        ${this.cart.length === 0 ?
+                            `<div class="empty-state">🛒 لا توجد بنود</div>` :
+                            `
+                            <div class="summary-box">
+                                <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+                                    <div>📦 البنود: <strong>${this.cart.length}</strong></div>
+                                    <div>🧪 الكت: <strong>${totalKits}</strong></div>
+                                    <div>📊 الوحدات: <strong>${grandTotal}</strong></div>
+                                </div>
+                            </div>
+                            ${this.cart.map(item => {
+                                const kits = parseInt(item.quantity) || 1;
+                                const total = this.calculateTotal(item);
+                                const hasBox = item.boxSize && !isNaN(parseFloat(item.boxSize));
+                                return `
+                                <div class="item-card">
+                                    <div class="item-info">
+                                        <div class="item-name">${item.name}</div>
+                                        <div class="item-code">
+                                            ${item.code ? `🔖 ${item.code}` : ''}
+                                            ${item.govCode ? ` • 🏛️ ${item.govCode}` : ''}
+                                            ${item.nupco ? ` • 📦 ${item.nupco}` : ''}
+                                            ${item.rocheCatalog ? ` • 🧬 ${item.rocheCatalog}` : ''}
+                                            <br>
+                                            <span class="badge" style="background:#e0e7ff;color:#3730a3;">${item.category}</span>
+                                            ${item.subCategory ? `<span class="badge" style="background:#dbeafe;color:#1e40af;">${item.subCategory}</span>` : ''}
+                                            ${hasBox ? `<span class="badge" style="background:#fef3c7;color:#92400e;">📦 ${item.boxSize} ${item.unit || ''}/كت</span>` : ''}
+                                        </div>
+                                        <div style="margin-top:0.5rem;padding:0.4rem 0.7rem;background:#dcfce7;border-radius:0.4rem;display:inline-block;font-size:0.8rem;">
+                                            ✅ الإجمالي: <strong>${total}</strong> ${hasBox ? (item.unit || '') : ''}
+                                            ${hasBox ? `<span style="color:#166534;">(${kits} كت × ${item.boxSize})</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="item-actions" style="flex-direction:column;gap:0.3rem;">
+                                        <div style="display:flex;align-items:center;gap:0.3rem;">
+                                            <label style="font-size:0.75rem;color:#6b7280;">عدد الكت:</label>
+                                            <input type="number" min="1" value="${kits}" class="quantity-input"
+                                                onchange="app.updateQuantity('${item.id}',this.value);app.render();">
+                                        </div>
+                                        <button class="btn btn-danger" onclick="app.removeFromCart('${item.id}');" style="font-size:0.75rem;padding:0.3rem 0.6rem;">🗑️ حذف</button>
+                                    </div>
+                                </div>`;
+                            }).join('')}
+
+                            <div style="margin-top:1.5rem;">
+                                <label style="display:block;margin-bottom:0.3rem;font-weight:600;font-size:0.9rem;">📝 ملاحظات:</label>
+                                <textarea class="input-field" rows="2" oninput="app.notes=this.value;">${this.notes}</textarea>
+                            </div>
+
+                            <div style="margin-top:1rem;padding:0.75rem;background:#f8fafc;border-radius:0.5rem;border:1px solid #e2e8f0;">
+                                <div style="font-weight:600;margin-bottom:0.5rem;color:#1e40af;font-size:0.9rem;">👤 بيانات مقدم الطلب</div>
+                                <input type="text" class="input-field" style="margin-bottom:0.4rem;" value="${this.requesterName}"
+                                    oninput="app.requesterName=this.value;app.saveSettings();">
+                                <input type="text" class="input-field" style="margin-bottom:0.4rem;" value="${this.requesterTitle}"
+                                    oninput="app.requesterTitle=this.value;app.saveSettings();">
+                                <input type="text" class="input-field" value="${this.department}"
+                                    oninput="app.department=this.value;app.saveSettings();">
+                            </div>
+
+                            <div style="margin-top:1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.5rem;">
+                                <button class="btn btn-success" onclick="app.printRequisition();" style="font-size:0.85rem;">🖨️ طباعة</button>
+                                <button class="btn btn-whatsapp" onclick="app.shareWhatsApp();" style="font-size:0.85rem;">📱 واتساب</button>
+                                <button class="btn btn-email" onclick="app.shareEmail();" style="font-size:0.85rem;">📧 بريد</button>
+                                <button class="btn btn-primary" onclick="app.copyOrder();" style="font-size:0.85rem;">📋 نسخ</button>
+                                <button class="btn btn-primary" onclick="app.exportCSV();" style="font-size:0.85rem;">📊 CSV</button>
+                                <button class="btn btn-danger" onclick="app.clearCart();" style="font-size:0.85rem;">🗑️ حذف الكل</button>
+                            </div>
+                            `
+                        }
+                    </div>
+                </div>`;
+            },
+
+            renderAddForm() {
+                return `
+                <div class="container" style="padding: 1rem 0;">
+                    <div class="card">
+                        <h2 style="margin-bottom: 1.5rem;">➕ إضافة بند جديد</h2>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block;margin-bottom:0.5rem;font-weight:600;">اسم البند: *</label>
+                            <input type="text" class="input-field" id="newItemName" placeholder="مثال: Glucose">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block;margin-bottom:0.5rem;font-weight:600;">الكود:</label>
+                            <input type="text" class="input-field" id="newItemCode" placeholder="مثال: GLUC3">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block;margin-bottom:0.5rem;font-weight:600;">الرقم الوزاري:</label>
+                            <input type="text" class="input-field" id="newItemGovCode" placeholder="787803883">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block;margin-bottom:0.5rem;font-weight:600;">رقم نبكو:</label>
+                            <input type="text" class="input-field" id="newItemNupco" placeholder="4111620006800">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block;margin-bottom:0.5rem;font-weight:600;">كتالوج روش:</label>
+                            <input type="text" class="input-field" id="newItemRocheCatalog" placeholder="08057800190">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block;margin-bottom:0.5rem;font-weight:600;">الفئة:</label>
+                            <select class="input-field" id="newItemCategory">
+                                ${['اختبارات بيور','كيمياء','هرمونات','مستهلكات','أمراض الدم','ميكروبيولوجيا','مستلزمات','محاليل','أنسجة']
+                                    .map(c => `<option value="${c}">${c}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block;margin-bottom:0.5rem;font-weight:600;">الفئة الفرعية:</label>
+                            <input type="text" class="input-field" id="newItemSubCategory" placeholder="مثال: كيمياء عامة c303">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block;margin-bottom:0.5rem;font-weight:600;">حجم العبوة:</label>
+                            <input type="text" class="input-field" id="newItemBoxSize" placeholder="مثال: 100">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display:block;margin-bottom:0.5rem;font-weight:600;">وحدة القياس:</label>
+                            <input type="text" class="input-field" id="newItemUnit" value="اختبار">
+                        </div>
+                        <button class="btn btn-success" style="width: 100%;" onclick="app.addNewItemHandler();">💾 إضافة</button>
+                    </div>
+                </div>`;
+            },
+
+            addNewItemHandler() {
+                this.newItemName = document.getElementById('newItemName').value;
+                this.newItemCode = document.getElementById('newItemCode').value;
+                this.newItemGovCode = document.getElementById('newItemGovCode').value;
+                this.newItemNupco = document.getElementById('newItemNupco').value;
+                this.newItemRocheCatalog = document.getElementById('newItemRocheCatalog').value;
+                this.newItemCategory = document.getElementById('newItemCategory').value;
+                this.newItemSubCategory = document.getElementById('newItemSubCategory').value;
+                this.newItemBoxSize = document.getElementById('newItemBoxSize').value;
+                this.newItemUnit = document.getElementById('newItemUnit').value;
+                this.addNewItem();
+            },
+        };
+
+        app.init();
+    </script>
+</body>
+</html>
